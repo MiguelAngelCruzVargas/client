@@ -1,8 +1,8 @@
 /**
- * Student List Admin Component
- * Manages student data display, search, filtering, and CRUD operations
+ * Componente Admin de Lista de Estudiantes
+ * Gestiona la visualización de datos de estudiantes, búsqueda, filtrado y operaciones CRUD
  * 
- * Backend Endpoints Required:
+ * Endpoints de Backend Requeridos:
  * - GET /api/admin/students?curso={curso}&turno={turno}
  * - DELETE /api/admin/students/{folio}
  * - PUT /api/admin/students/{folio}
@@ -30,7 +30,7 @@ function LoadingScreen({ onComplete }) {
     );
 }
 
-// Component for category buttons (courses)
+// Componente para botones de categoría (cursos)
 function CategoryButton({ label, isActive, onClick }) {
     return (
         <button
@@ -83,31 +83,31 @@ export function ListaAlumnos_Admin_comp() {
       const data = await loadStudentsData(activeCategory, activeTurno);
       setAlumnos(data || []);
     } catch (err) {
-      console.error('Error loading students:', err);
+      console.error('Error al cargar estudiantes:', err);
       setAlumnos([]);
     }
   };
 
-  // Load students when course and shift are selected
+  // Cargar estudiantes cuando se seleccionan curso y turno
   useEffect(() => {
     if (activeCategory && activeTurno) {
       fetchAlumnos();
     }
   }, [activeCategory, activeTurno]);
 
-  // Handle initial loading screen completion
+  // Manejar la finalización de la pantalla de carga inicial
   const handleLoadingComplete = () => {
     setShowLoadingScreen(false);
   };
 
-  // Function to manually refresh data
+  // Función para actualizar manualmente los datos
   const handleRefreshData = async () => {
     if (activeCategory && activeTurno) {
       await fetchAlumnos();
     }
   };
 
-  // Filter students based on search term, active category and shift
+  // Filtrar estudiantes basado en término de búsqueda, categoría activa y turno
   const alumnosFiltrados = alumnos.filter(alumno => {
     const matchesSearch = 
       alumno.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,51 +119,51 @@ export function ListaAlumnos_Admin_comp() {
       alumno.municipioComunidad.toLowerCase().includes(filtro.toLowerCase());
     
     const matchesCategory = activeCategory === null || alumno.curso === activeCategory;
-    // If no shift selected, show all students from the course
+    // Si no se selecciona turno, mostrar todos los estudiantes del curso
     const matchesTurno = activeTurno === null || alumno.turno === activeTurno;
     
     return matchesSearch && matchesCategory && matchesTurno;
   });
 
-  // Handle category selection
+  // Manejar selección de categoría
   const handleCategorySelect = (categoria) => {
     setActiveCategory(categoria === activeCategory ? null : categoria);
-    // Reset shift when category changes
+    // Reiniciar turno cuando cambia la categoría
     setActiveTurno(null);
   };
 
-  // Handle shift selection
+  // Manejar selección de turno
   const handleTurnoSelect = (turno) => {
     setActiveTurno(turno === activeTurno ? null : turno);
   };
 
-  // Student action handlers using AdminContext
+  // Manejadores de acciones de estudiante usando AdminContext
   const handleVerPerfil = (alumno) => {
-    // Navigate to student profile (to be implemented with routing)
-    console.log('View profile for student:', alumno.folio);
+    // Navegar al perfil del estudiante (a implementar con enrutamiento)
+    console.log('Ver perfil del estudiante:', alumno.folio);
   };
 
   const handleEditarAlumno = async (alumno) => {
     try {
-      // Call context function to edit student
+      // Llamar función del contexto para editar estudiante
       await updateStudent(alumno.folio, alumno);
-      console.log('Student updated:', alumno.folio);
-      // Refresh data after edit
+      console.log('Estudiante actualizado:', alumno.folio);
+      // Actualizar datos después de editar
       await fetchAlumnos();
     } catch (error) {
-      console.error('Error updating student:', error);
+      console.error('Error al actualizar estudiante:', error);
     }
   };
 
   const handleEliminarAlumno = async (alumno) => {
-    if (window.confirm(`Are you sure you want to delete student ${alumno.nombres} ${alumno.apellidos}?`)) {
+    if (window.confirm(`¿Estás seguro de que quieres eliminar al estudiante ${alumno.nombres} ${alumno.apellidos}?`)) {
       try {
         await deleteStudent(alumno.folio);
-        console.log('Student deleted:', alumno.folio);
-        // Refresh data after deletion
+        console.log('Estudiante eliminado:', alumno.folio);
+        // Actualizar datos después de eliminación
         await fetchAlumnos();
       } catch (error) {
-        console.error('Error deleting student:', error);
+        console.error('Error al eliminar estudiante:', error);
       }
     }
   };
@@ -186,12 +186,12 @@ export function ListaAlumnos_Admin_comp() {
     }
   };
 
-  // If initially loading, show loading screen
+  // Si está cargando inicialmente, mostrar pantalla de carga
   if (showLoadingScreen) {
     return <LoadingScreen onComplete={handleLoadingComplete} />;
   }
 
-  // Error handling
+  // Manejo de errores
   if (error) {
     return (
       <div className="w-full h-full min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-rose-100">
@@ -600,7 +600,7 @@ export function ListaAlumnos_Admin_comp() {
           </div>
           </>
           ) : (
-            // Message when no course and shift are selected
+            // Mensaje cuando no se han seleccionado curso y turno
             <div className="text-center py-8 xs:py-12 bg-gradient-to-br from-gray-50 to-white rounded-lg xs:rounded-xl shadow-lg border border-gray-200">
               <div className="max-w-xs xs:max-w-md mx-auto px-4">
                 <svg className="mx-auto h-12 xs:h-16 w-12 xs:w-16 text-purple-400 mb-3 xs:mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

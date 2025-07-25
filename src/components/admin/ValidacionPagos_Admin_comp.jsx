@@ -1,8 +1,8 @@
 /**
- * Payment Validation Admin Component
- * Handles payment verification, contract generation, and approval/rejection workflow
+ * Componente de Validación de Pagos Admin
+ * Maneja la verificación de pagos, generación de contratos y flujo de aprobación/rechazo
  * 
- * Backend Endpoints Required:
+ * Endpoints del Backend Requeridos:
  * - GET /api/admin/payments/validation?curso={curso}&turno={turno}
  * - PUT /api/admin/payments/{id}/approve
  * - PUT /api/admin/payments/{id}/reject
@@ -26,7 +26,7 @@ function LoadingScreen({ onComplete }) {
         <div className="min-h-screen flex items-center justify-center p-4 bg-white">
             <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                <p className="text-lg font-medium text-gray-700">Loading payment validation...</p>
+                <p className="text-lg font-medium text-gray-700">Cargando validación de pagos...</p>
             </div>
         </div>
     );
@@ -96,7 +96,7 @@ export function ValidacionPagos_Admin_comp() {
       const data = await loadPaymentsData(activeCategory, activeTurno);
       setPagos(data || []);
     } catch (err) {
-      console.error('Error loading payments:', err);
+      console.error('Error cargando pagos:', err);
       setPagos([]);
     }
   };
@@ -132,7 +132,7 @@ export function ValidacionPagos_Admin_comp() {
   // Función para manejar la selección de categoría
   const handleCategorySelect = (categoria) => {
     setActiveCategory(categoria === activeCategory ? null : categoria);
-    // Reset turno cuando se cambia de categoría
+    // Resetear turno cuando se cambia de categoría
     setActiveTurno(null);
   };
 
