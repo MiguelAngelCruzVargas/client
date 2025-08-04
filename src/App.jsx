@@ -27,16 +27,17 @@ export default function App(){
         <BrowserRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
           <Routes>
 
-            {/* Ruta principal - Ahora muestra el Dashboard de Alumno directamente */}
-            <Route path='/' element={<Navigate to="/alumno/dashboard" replace />} /> {/* Redirige automáticamente */}
+            {/* Ruta principal - Redirige al dashboard de alumno por defecto */}
+            <Route path='/' element={<Navigate to="/alumno/dashboard" replace />} />
             
+            {/* Ruta de login */}
             <Route path='/login' element={<Login/>}></Route>
 
-            {/* RUTAS VIEJAS DE ADMIN REMOVIDAS - Se usa AdminDashboardBundle en /admin1/* */}
+            {/* RUTAS VIEJAS DE ADMIN REMOVIDAS - Se usa AdminDashboardBundle en /administrativo/* */}
             
             {/* ✅ RUTA DEL BUNDLE DEL DASHBOARD DE ADMINISTRADOR */}
-            {/* Esta ruta manejará todas las sub-rutas dentro de /admin1/ */}
-            <Route path="/admin1/*" element={<AdminDashboardBundle />} />
+            {/* Esta ruta manejará todas las sub-rutas dentro de /administrativo/ */}
+            <Route path="/administrativo/*" element={<AdminDashboardBundle />} />
 
             {/* RUTAS DE ASESOR REMOVIDAS - No se usan */}
 

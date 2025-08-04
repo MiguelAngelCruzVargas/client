@@ -2,16 +2,27 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 /**
- * Contexto principal para el manejo de datos administrativos
+ * AdminContext - Contexto principal para el manejo de datos administrativos
  * Centraliza la lógica de datos del backend para todos los componentes admin
  * 
- * ESTADO ACTUAL: FUNCIONANDO CON DATOS MOCK
+ * 🎯 ESTADO ACTUAL: FUNCIONANDO CON DATOS MOCK
  * - Todas las funciones tienen datos mock temporales
  * - Los endpoints reales están comentados y listos para activar
  * - Solo necesitas descomentar y conectar el backend real
  * 
- * TODO BACKEND:
- * 1. Crear endpoints en el backend
+ * 📋 COMPONENTES QUE USAN AdminContext:
+ * ✅ BienvenidaAdmin.jsx - adminProfile, refreshDashboard, dashboardData
+ * ✅ inicio-admin.jsx - dashboardData, loadDashboardMetrics (via AdminNotificationContext)
+ * ✅ ListaAlumnos_Admin_comp.jsx - loadStudentsData, deleteStudent, updateStudent
+ * ✅ ValidacionPagos_Admin_comp.jsx - loadPaymentsData, approvePayment, rejectPayment, generateContract, uploadContract
+ * ✅ Configuracion_Admin_comp.jsx - adminProfile, updateAdminProfile, uploadAdminAvatar
+ * 
+ * ❌ COMPONENTES QUE NO USAN AdminContext (usan API directa):
+ * ❌ ComprobanteRecibo.jsx - API directa para validación específica de recibos
+ * ❌ Calendario_Admin_comp.jsx - API directa para eventos de calendario específicos
+ * 
+ * 🚀 TODO BACKEND:
+ * 1. Crear endpoints en el backend según la documentación
  * 2. Descomentar las llamadas fetch reales
  * 3. Comentar/eliminar los datos mock
  */
@@ -47,7 +58,26 @@ export const AdminProvider = ({ children }) => {
   const [systemStatus, setSystemStatus] = useState('online');
 
   /**
-   * Función para cargar métricas del dashboard principal
+   * 📊 FUNCIÓN: loadDashboardMetrics
+   * 
+   * 🎯 USADO POR:
+   * - BienvenidaAdmin.jsx: Carga métricas en el dashboard principal
+   * - inicio-admin.jsx: Via AdminNotificationContext para métricas en tiempo real
+   * 
+   * 📡 ENDPOINT: GET /api/admin/dashboard/metrics
+   * 
+   * 💡 EJEMPLO DE USO:
+   * const { dashboardData, loadDashboardMetrics } = useAdminContext();
+   * useEffect(() => { loadDashboardMetrics(); }, []);
+   * 
+   * 📤 RESPONSE ESPERADO:
+   * {
+   *   ingresos: 125000,
+   *   pagosPendientes: 23,
+   *   nuevosAlumnos: 15,
+   *   cursosActivos: 8,
+   *   accesosActivados: 42
+   * }
    */
   const loadDashboardMetrics = async () => {
     try {
@@ -91,7 +121,29 @@ export const AdminProvider = ({ children }) => {
   };
 
   /**
-   * Función para cargar perfil del administrador
+   * 👤 FUNCIÓN: loadAdminProfile
+   * 
+   * 🎯 USADO POR:
+   * - BienvenidaAdmin.jsx: Muestra datos del admin y avatar
+   * - Configuracion_Admin_comp.jsx: Carga datos para edición de perfil
+   * 
+   * 📡 ENDPOINT: GET /api/admin/profile
+   * 
+   * 💡 EJEMPLO DE USO:
+   * const { adminProfile } = useAdminContext();
+   * <img src={adminProfile?.avatar} alt="Avatar" />
+   * <h2>{adminProfile?.name}</h2>
+   * 
+   * 📤 RESPONSE ESPERADO:
+   * {
+   *   id: 'admin_001',
+   *   name: 'Administrador Principal',
+   *   email: 'admin@mqerk.academy',
+   *   role: 'Super Admin',
+   *   avatar: 'https://...',
+   *   lastLogin: '2024-12-15T10:30:00Z',
+   *   permissions: ['read', 'write', 'delete']
+   * }
    */
   const loadAdminProfile = async () => {
     try {
@@ -136,7 +188,33 @@ export const AdminProvider = ({ children }) => {
   };
 
   /**
-   * Función para cargar datos de estudiantes (para ListaAlumnos)
+   * 🎓 FUNCIÓN: loadStudentsData
+   * 
+   * 🎯 USADO POR:
+   * - ListaAlumnos_Admin_comp.jsx: Carga lista completa de estudiantes filtrada por curso/turno
+   * 
+   * 📡 ENDPOINT: GET /api/admin/students?curso={curso}&turno={turno}
+   * 
+   * 💡 EJEMPLO DE USO:
+   * const { loadStudentsData } = useAdminContext();
+   * const fetchStudents = async () => {
+   *   const students = await loadStudentsData('EEAU', 'Matutino');
+   *   setStudentsList(students);
+   * };
+   * 
+   * 📤 RESPONSE ESPERADO: Array de objetos estudiante
+   * [
+   *   {
+   *     folio: 'ALU001',
+   *     nombres: 'Juan Carlos',
+   *     apellidos: 'Pérez García',
+   *     correoElectronico: 'juan@email.com',
+   *     curso: 'EEAU',
+   *     turno: 'Matutino',
+   *     estatus: 'Activo'
+   *     // ... más campos
+   *   }
+   * ]
    */
   const loadStudentsData = async (curso, turno) => {
     try {
@@ -251,7 +329,33 @@ export const AdminProvider = ({ children }) => {
   };
 
   /**
-   * Función para cargar datos de pagos (para ValidacionPagos)
+   * 💳 FUNCIÓN: loadPaymentsData
+   * 
+   * 🎯 USADO POR:
+   * - ValidacionPagos_Admin_comp.jsx: Carga pagos pendientes de validación
+   * 
+   * 📡 ENDPOINT: GET /api/admin/payments/validation?curso={curso}&turno={turno}
+   * 
+   * 💡 EJEMPLO DE USO:
+   * const { loadPaymentsData } = useAdminContext();
+   * const fetchPagos = async () => {
+   *   const pagos = await loadPaymentsData('EEAU', 'Matutino');
+   *   setPagosList(pagos);
+   * };
+   * 
+   * 📤 RESPONSE ESPERADO: Array de objetos pago
+   * [
+   *   {
+   *     id: 'PAY001',
+   *     folio: 'PAY-2024-001',
+   *     alumno: 'Juan Carlos Pérez García',
+   *     pagoCurso: '$2,500.00',
+   *     metodoPago: 'Transferencia',
+   *     estatus: 'Pendiente',
+   *     contratoGenerado: false,
+   *     contratoSubido: false
+   *   }
+   * ]
    */
   const loadPaymentsData = async (curso, turno) => {
     try {
@@ -315,7 +419,31 @@ export const AdminProvider = ({ children }) => {
   };
 
   /**
-   * Función para aprobar un pago
+   * ✅ FUNCIÓN: approvePayment
+   * 
+   * 🎯 USADO POR:
+   * - ValidacionPagos_Admin_comp.jsx: Botón "Aprobar" en tabla de pagos
+   * 
+   * 📡 ENDPOINT: PUT /api/admin/payments/{paymentId}/approve
+   * 
+   * 💡 EJEMPLO DE USO:
+   * const { approvePayment } = useAdminContext();
+   * const handleAprobar = async (paymentId) => {
+   *   const result = await approvePayment(paymentId);
+   *   if (result.success) {
+   *     setMessage('Pago aprobado exitosamente');
+   *     refreshPaymentsList();
+   *   }
+   * };
+   * 
+   * 📤 RESPONSE ESPERADO:
+   * {
+   *   success: true,
+   *   message: 'Pago aprobado exitosamente',
+   *   paymentId: 'PAY001',
+   *   status: 'Aprobado',
+   *   timestamp: '2024-12-15T10:30:00Z'
+   * }
    */
   const approvePayment = async (paymentId) => {
     try {
@@ -353,7 +481,32 @@ export const AdminProvider = ({ children }) => {
   };
 
   /**
-   * Función para rechazar un pago
+   * ❌ FUNCIÓN: rejectPayment
+   * 
+   * 🎯 USADO POR:
+   * - ValidacionPagos_Admin_comp.jsx: Botón "Rechazar" con modal de razón
+   * 
+   * 📡 ENDPOINT: PUT /api/admin/payments/{paymentId}/reject
+   * 
+   * 💡 EJEMPLO DE USO:
+   * const { rejectPayment } = useAdminContext();
+   * const handleRechazar = async (paymentId, razon) => {
+   *   const result = await rejectPayment(paymentId, razon);
+   *   if (result.success) {
+   *     setMessage('Pago rechazado exitosamente');
+   *     refreshPaymentsList();
+   *   }
+   * };
+   * 
+   * 📤 RESPONSE ESPERADO:
+   * {
+   *   success: true,
+   *   message: 'Pago rechazado exitosamente',
+   *   paymentId: 'PAY001',
+   *   status: 'Rechazado',
+   *   reason: 'Comprobante ilegible',
+   *   timestamp: '2024-12-15T10:30:00Z'
+   * }
    */
   const rejectPayment = async (paymentId, reason) => {
     try {
@@ -404,7 +557,40 @@ export const AdminProvider = ({ children }) => {
   }, []);
 
   /**
-   * Generate contract for a payment
+   * 📄 FUNCIÓN: generateContract
+   * 
+   * 🎯 USADO POR:
+   * - ValidacionPagos_Admin_comp.jsx: Botón "Generar Contrato" con modal de datos adicionales
+   * 
+   * 📡 ENDPOINT: PUT /api/admin/payments/{paymentId}/generate-contract
+   * 
+   * 💡 EJEMPLO DE USO:
+   * const { generateContract } = useAdminContext();
+   * const handleGenerarContrato = async (paymentId, contractData) => {
+   *   const result = await generateContract(paymentId, contractData);
+   *   if (result.success) {
+   *     setMessage('Contrato generado exitosamente');
+   *     // Descargar PDF: window.open(result.contractUrl);
+   *   }
+   * };
+   * 
+   * 📥 BODY ENVIADO:
+   * {
+   *   direccion: 'Calle Principal #123',
+   *   fechaNacimiento: '1990-01-15',
+   *   telefonoContacto: '555-0123',
+   *   nombreTutor: 'María García',
+   *   // ... otros datos del contrato
+   * }
+   * 
+   * 📤 RESPONSE ESPERADO:
+   * {
+   *   success: true,
+   *   message: 'Contrato generado exitosamente',
+   *   paymentId: 'PAY001',
+   *   contractUrl: '/contracts/PAY001-contract.pdf',
+   *   timestamp: '2024-12-15T10:30:00Z'
+   * }
    */
   const generateContract = async (paymentId, contractData) => {
     try {
@@ -443,7 +629,36 @@ export const AdminProvider = ({ children }) => {
   };
 
   /**
-   * Upload signed contract for a payment
+   * 📤 FUNCIÓN: uploadContract
+   * 
+   * 🎯 USADO POR:
+   * - ValidacionPagos_Admin_comp.jsx: Input file "Subir Contrato Firmado"
+   * 
+   * 📡 ENDPOINT: POST /api/admin/payments/{paymentId}/upload-contract
+   * 
+   * 💡 EJEMPLO DE USO:
+   * const { uploadContract } = useAdminContext();
+   * const handleSubirContrato = async (paymentId, file) => {
+   *   const result = await uploadContract(paymentId, file);
+   *   if (result.success) {
+   *     setMessage('Contrato subido exitosamente');
+   *     // Marcar como "Contrato Subido: Sí"
+   *   }
+   * };
+   * 
+   * 📥 FORMDATA ENVIADO:
+   * FormData:
+   *   - contract: File (PDF del contrato firmado)
+   *   - paymentId: 'PAY001'
+   * 
+   * 📤 RESPONSE ESPERADO:
+   * {
+   *   success: true,
+   *   message: 'Contrato subido exitosamente',
+   *   paymentId: 'PAY001',
+   *   uploadedUrl: '/contracts/PAY001-signed.pdf',
+   *   timestamp: '2024-12-15T10:30:00Z'
+   * }
    */
   const uploadContract = async (paymentId, contractFile) => {
     try {
@@ -485,7 +700,32 @@ export const AdminProvider = ({ children }) => {
   };
 
   /**
-   * Delete/Remove a student
+   * 🗑️ FUNCIÓN: deleteStudent
+   * 
+   * 🎯 USADO POR:
+   * - ListaAlumnos_Admin_comp.jsx: Botón "Eliminar" con confirmación
+   * 
+   * 📡 ENDPOINT: DELETE /api/admin/students/{studentId}
+   * 
+   * 💡 EJEMPLO DE USO:
+   * const { deleteStudent } = useAdminContext();
+   * const handleEliminar = async (studentId) => {
+   *   if (confirm('¿Estás seguro?')) {
+   *     const result = await deleteStudent(studentId);
+   *     if (result.success) {
+   *       setMessage('Estudiante eliminado');
+   *       refreshStudentsList();
+   *     }
+   *   }
+   * };
+   * 
+   * 📤 RESPONSE ESPERADO:
+   * {
+   *   success: true,
+   *   message: 'Estudiante eliminado exitosamente',
+   *   studentId: 'ALU001',
+   *   timestamp: '2024-12-15T10:30:00Z'
+   * }
    */
   const deleteStudent = async (studentId) => {
     try {
@@ -522,7 +762,43 @@ export const AdminProvider = ({ children }) => {
   };
 
   /**
-   * Update student information
+   * ✏️ FUNCIÓN: updateStudent
+   * 
+   * 🎯 USADO POR:
+   * - ListaAlumnos_Admin_comp.jsx: Modal "Editar Estudiante" 
+   * 
+   * 📡 ENDPOINT: PUT /api/admin/students/{studentId}
+   * 
+   * 💡 EJEMPLO DE USO:
+   * const { updateStudent } = useAdminContext();
+   * const handleActualizar = async (studentId, formData) => {
+   *   const result = await updateStudent(studentId, formData);
+   *   if (result.success) {
+   *     setMessage('Estudiante actualizado');
+   *     setShowEditModal(false);
+   *     refreshStudentsList();
+   *   }
+   * };
+   * 
+   * 📥 BODY ENVIADO:
+   * {
+   *   nombres: 'Juan Carlos',
+   *   apellidos: 'Pérez García',
+   *   correoElectronico: 'juan@email.com',
+   *   telefonoAlumno: '555-0123',
+   *   curso: 'EEAU',
+   *   turno: 'Matutino',
+   *   // ... todos los campos editables
+   * }
+   * 
+   * 📤 RESPONSE ESPERADO:
+   * {
+   *   success: true,
+   *   message: 'Estudiante actualizado exitosamente',
+   *   studentId: 'ALU001',
+   *   updatedData: { ... },
+   *   timestamp: '2024-12-15T10:30:00Z'
+   * }
    */
   const updateStudent = async (studentId, studentData) => {
     try {
@@ -652,8 +928,34 @@ export const AdminProvider = ({ children }) => {
   };
 
   /**
-   * Function to upload admin avatar photo
-   * TODO: BACKEND - Replace with real endpoint when available
+   * 📷 FUNCIÓN: uploadAdminAvatar
+   * 
+   * 🎯 USADO POR:
+   * - Configuracion_Admin_comp.jsx: Input file para cambiar foto de perfil
+   * 
+   * 📡 ENDPOINT: POST /api/admin/profile/avatar
+   * 
+   * 💡 EJEMPLO DE USO:
+   * const { uploadAdminAvatar } = useAdminContext();
+   * const handleImageChange = async (file) => {
+   *   const result = await uploadAdminAvatar(file);
+   *   if (result.success) {
+   *     setPersonalData(prev => ({
+   *       ...prev,
+   *       fotoPreview: result.avatarUrl
+   *     }));
+   *   }
+   * };
+   * 
+   * 📥 FORMDATA ENVIADO:
+   * FormData:
+   *   - avatar: File (imagen JPG/PNG del avatar)
+   * 
+   * 📤 RESPONSE ESPERADO:
+   * {
+   *   success: true,
+   *   avatarUrl: 'https://cdn.mqerk.com/avatars/admin_001.jpg'
+   * }
    */
   const uploadAdminAvatar = async (file) => {
     try {
@@ -701,8 +1003,48 @@ export const AdminProvider = ({ children }) => {
   };
 
   /**
-   * Function to update admin profile information
-   * TODO: BACKEND - Replace with real endpoint when available
+   * 👤 FUNCIÓN: updateAdminProfile
+   * 
+   * 🎯 USADO POR:
+   * - Configuracion_Admin_comp.jsx: Formulario "Mi Perfil" - actualizar datos personales
+   * 
+   * 📡 ENDPOINT: PUT /api/admin/profile
+   * 
+   * 💡 EJEMPLO DE USO:
+   * const { updateAdminProfile } = useAdminContext();
+   * const handleUpdatePersonalData = async () => {
+   *   const profileData = {
+   *     name: `${personalData.nombre} ${personalData.apellidos}`,
+   *     email: personalData.email,
+   *     phone: personalData.telefono,
+   *     avatar: avatarUrl
+   *   };
+   *   const result = await updateAdminProfile(profileData);
+   *   if (result.success) {
+   *     setMessage('Perfil actualizado exitosamente');
+   *   }
+   * };
+   * 
+   * 📥 BODY ENVIADO:
+   * {
+   *   name: 'Administrador Principal',
+   *   email: 'admin@mqerk.academy',
+   *   phone: '+52 999 123 4567',
+   *   avatar: 'https://cdn.mqerk.com/avatars/admin_001.jpg'
+   * }
+   * 
+   * 📤 RESPONSE ESPERADO:
+   * {
+   *   success: true,
+   *   profile: {
+   *     id: 'admin_001',
+   *     name: 'Administrador Principal',
+   *     email: 'admin@mqerk.academy',
+   *     phone: '+52 999 123 4567',
+   *     avatar: 'https://...',
+   *     lastUpdated: '2024-12-15T10:30:00Z'
+   *   }
+   * }
    */
   const updateAdminProfile = async (profileData) => {
     try {
@@ -793,44 +1135,45 @@ export const AdminProvider = ({ children }) => {
   }, []);
 
   // Context value with all admin functions and state
+  // 🎯 TODAS LAS FUNCIONES Y ESTADOS DISPONIBLES PARA LOS COMPONENTES
   const value = {
-    // Estados principales
-    dashboardData,
-    adminProfile,
-    isLoading,
-    error,
-    lastUpdated,
-    systemStatus,
+    // 📊 ESTADOS PRINCIPALES - Usados por múltiples componentes
+    dashboardData,        // ✅ BienvenidaAdmin, inicio-admin
+    adminProfile,         // ✅ BienvenidaAdmin, Configuracion_Admin_comp
+    isLoading,           // ✅ Todos los componentes (estados de carga)
+    error,               // ✅ Todos los componentes (manejo de errores)
+    lastUpdated,         // ✅ Componentes que necesitan timestamps
+    systemStatus,        // ✅ Estado general del sistema
     
-    // Estados específicos
-    studentsData,
-    paymentsData,
+    // 📋 ESTADOS ESPECÍFICOS - Datos cacheados por sección
+    studentsData,        // ✅ ListaAlumnos_Admin_comp
+    paymentsData,        // ✅ ValidacionPagos_Admin_comp
     
-    // Funciones del dashboard
-    refreshDashboard,
-    loadDashboardMetrics,
+    // 🔄 FUNCIONES DEL DASHBOARD - Métricas y refrescos
+    refreshDashboard,    // ✅ BienvenidaAdmin (botón refresh)
+    loadDashboardMetrics,// ✅ BienvenidaAdmin, inicio-admin
     
-    // Funciones de estudiantes
-    loadStudentsData,
-    deleteStudent,
-    updateStudent,
-    updateStudentStatus,
+    // 🎓 FUNCIONES DE ESTUDIANTES - CRUD completo
+    loadStudentsData,    // ✅ ListaAlumnos_Admin_comp (cargar lista)
+    deleteStudent,       // ✅ ListaAlumnos_Admin_comp (botón eliminar)
+    updateStudent,       // ✅ ListaAlumnos_Admin_comp (modal editar)
+    updateStudentStatus, // ✅ ListaAlumnos_Admin_comp (cambiar estatus)
     
-    // Funciones de pagos
-    loadPaymentsData,
-    approvePayment,
-    rejectPayment,
-    generateContract,
-    uploadContract,
+    // 💳 FUNCIONES DE PAGOS - Validación y contratos
+    loadPaymentsData,    // ✅ ValidacionPagos_Admin_comp (cargar pagos)
+    approvePayment,      // ✅ ValidacionPagos_Admin_comp (aprobar)
+    rejectPayment,       // ✅ ValidacionPagos_Admin_comp (rechazar)
+    generateContract,    // ✅ ValidacionPagos_Admin_comp (generar contrato)
+    uploadContract,      // ✅ ValidacionPagos_Admin_comp (subir firmado)
     
-    // Funciones de reportes
-    loadFinancialReports,
+    // 📊 FUNCIONES DE REPORTES - Análisis financiero
+    loadFinancialReports,// ✅ Para futuros componentes de reportes
     
-    // Profile functions
-    loadAdminProfile,
-    uploadAdminAvatar,
-    updateAdminProfile,
-    removeAdminAvatar
+    // 👤 FUNCIONES DE PERFIL ADMIN - Gestión personal
+    loadAdminProfile,    // ✅ Auto-carga inicial
+    uploadAdminAvatar,   // ✅ Configuracion_Admin_comp (subir foto)
+    updateAdminProfile,  // ✅ Configuracion_Admin_comp (actualizar datos)
+    removeAdminAvatar    // ✅ Configuracion_Admin_comp (quitar foto)
   };
 
   return (
