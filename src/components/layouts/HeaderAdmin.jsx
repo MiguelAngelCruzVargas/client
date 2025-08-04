@@ -35,6 +35,17 @@ export function HeaderAdmin({
   // Mapeo de títulos de rutas para títulos dinámicos de página
   // Usado para mostrar el nombre de la sección actual en el encabezado
   const routeTitles = {
+    "/administrativo/bienvenida": "Panel Principal",
+    "/administrativo/inicio-admin": "Panel Administrativo", 
+    "/administrativo/comprobantes-recibo": "Comprobantes de Pago",
+    "/administrativo/lista-alumnos": "Lista de Estudiantes",
+    "/administrativo/generar-contrato": "Generar Contrato",
+    "/administrativo/reportes-pagos": "Reportes de Pagos", 
+    "/administrativo/calendario": "Calendario",
+    "/administrativo/email": "Correo Electrónico",
+    "/administrativo/configuracion": "Configuración",
+    "/login": "Iniciar Sesión",
+    // Rutas antiguas para compatibilidad
     "/admin1/dashboard": "Panel Principal",
     "/admin1/inicio-admin": "Panel Administrativo", 
     "/admin1/comprobantes-recibo": "Comprobantes de Pago",
@@ -44,7 +55,6 @@ export function HeaderAdmin({
     "/admin1/calendario": "Calendario",
     "/admin1/email": "Correo Electrónico",
     "/admin1/configuracion": "Configuración",
-    "/login": "Iniciar Sesión",
     // Agregar más rutas según sea necesario
   };
 
@@ -141,27 +151,21 @@ export function HeaderAdmin({
     <header className="relative flex items-center justify-between z-50 bg-gradient-to-r from-[#3d18c3] to-[#4816bf] sticky top-0 left-0 w-full px-3 sm:px-6 py-4">
       {/* Contenedor del Logo */}
       <div className="flex items-center justify-start h-full w-fit z-10 pl-2">
-        <Link to={`/`} className="flex items-center justify-center">
+        <Link to={`/admin1/dashboard`} className="flex items-center justify-center">
           <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
             <Logos src={MQerkLogo} />
           </div>
         </Link>
       </div>
 
-      {/* Central text block - Absolute center for small screens */}
       <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col justify-center items-center px-8 md:px-12 lg:px-16 w-auto max-w-4xl">
-        {/*
-          Visibilidad del título controlada por tamaño de pantalla:
-          - En PC (sm:block): Título Principal Más Grande, Nombre de Sección Actual (discreto)
-          - En Móvil (sm:hidden): MQerK Academy, Nombre de Sección Actual (discreto)
-        */}
-
+        
         {/* Títulos para PC */}
         <div className="hidden sm:flex flex-col items-center">
           <h1 className="text-center text-lg md:text-xl lg:text-2xl text-white font-extrabold mb-1 whitespace-nowrap tracking-wide">
             Asesores Especializados en Educación de Ciencia y Tecnología
           </h1>
-          {currentSectionTitle && ( // Solo mostrar si hay un título de sección
+          {currentSectionTitle && (
             <p className="text-center text-sm md:text-base text-white font-medium opacity-80 mt-1 whitespace-nowrap uppercase tracking-wider">
               {currentSectionTitle}
             </p>
@@ -173,7 +177,7 @@ export function HeaderAdmin({
           <h1 className="text-center text-base text-white font-extrabold mb-1 whitespace-nowrap tracking-wide">
             MQerK Academy
           </h1>
-          {currentSectionTitle && ( // Solo mostrar si hay un título de sección
+          {currentSectionTitle && ( 
             <p className="text-center text-xs text-white font-medium opacity-70 mt-1 whitespace-nowrap uppercase tracking-wider">
               {currentSectionTitle}
             </p>
@@ -366,7 +370,7 @@ export function HeaderAdmin({
               <div className="py-2">
                 {/* Profile Settings */}
                 <Link
-                  to="/admin1/configuracion"
+                  to="/administrativo/configuracion?section=perfil"
                   className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50/50 transition-colors duration-150"
                   onClick={() => setIsProfileOpen(false)}
                 >
@@ -378,7 +382,7 @@ export function HeaderAdmin({
 
                 {/* Account Settings */}
                 <Link
-                  to="/admin1/configuracion"
+                  to="/administrativo/configuracion?section=general"
                   className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50/50 transition-colors duration-150"
                   onClick={() => setIsProfileOpen(false)}
                 >

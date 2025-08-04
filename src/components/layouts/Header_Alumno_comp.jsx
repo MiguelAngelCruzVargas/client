@@ -159,7 +159,7 @@ export function Header_Alumno_comp({
 
   return (
     <>
-      {/* BACKEND: Modal de confirmación de logout - Sobrio y elegante */}
+      {/* BACKEND: Modal de confirmación de logout */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100">
@@ -489,7 +489,7 @@ export function Header_Alumno_comp({
         </div>
       </div>
 
-      {/* BACKEND: Modal de confirmación de logout - Sobrio y elegante */}
+      {/* BACKEND: Modal de confirmación de logout  */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100">

@@ -351,7 +351,7 @@ const InicioAlumnoDashboard = ({
 
   // BACKEND: Determinar si mostrar el bloqueo de pago
   // SEGURIDAD: Se muestra cuando el estudiante no ha pagado O no está verificado
-  // IMPORTANTE: No depende de isFirstAccess para evitar bypasses de seguridad
+
   const mostrarBloqueo = !finalHaPagado || !finalVerificado;
   
   // console.log('🔒 Estado de bloqueo:', {
