@@ -154,29 +154,90 @@ export const AdminProvider = ({ children }) => {
       
       // const students = await response.json();
       
-      // MOCK DATA - Estudiantes temporales
+      // MOCK DATA - Estudiantes temporales con datos completos
       await new Promise(resolve => setTimeout(resolve, 600)); // Simular latencia
       
       const mockStudents = [
         {
           folio: 'ALU001',
-          correoElectronico: 'estudiante1@email.com',
           nombres: 'Juan Carlos',
           apellidos: 'Pérez García',
+          correoElectronico: 'juan.perez@email.com',
+          telefonoAlumno: '555-0123',
+          municipioComunidad: 'Ciudad de México',
+          nombreTutor: 'María García Pérez',
+          telefonoTutor: '555-0124',
+          nivelAcademico: 'Preparatoria',
+          gradoSemestre: '3er Semestre',
+          bachillerato: 'Preparatoria Nacional',
+          licenciaturaPostula: 'Ingeniería en Sistemas',
+          universidadesPostula: 'UNAM, IPN',
           curso: curso,
           turno: turno,
+          asesor: 'Prof. Ana López',
+          grupo: 'A1',
+          modalidad: 'Presencial',
+          tipoAlergia: 'Ninguna',
+          discapacidadTranstorno: 'Ninguna',
+          orientacionVocacional: 'Sí',
+          cambioQuiereLograr: 'Mejorar mis habilidades matemáticas para ingresar a la universidad',
+          comentarioEspera: 'Espero aprender de forma didáctica y práctica',
           estatus: 'Activo',
           fechaRegistro: '2024-12-15'
         },
         {
           folio: 'ALU002',
-          correoElectronico: 'estudiante2@email.com',
           nombres: 'María Elena',
           apellidos: 'López Martínez',
+          correoElectronico: 'maria.lopez@email.com',
+          telefonoAlumno: '555-0125',
+          municipioComunidad: 'Guadalajara',
+          nombreTutor: 'Carlos López Hernández',
+          telefonoTutor: '555-0126',
+          nivelAcademico: 'Preparatoria',
+          gradoSemestre: '2do Semestre',
+          bachillerato: 'CECYTEM',
+          licenciaturaPostula: 'Medicina',
+          universidadesPostula: 'UNAM, UAM',
           curso: curso,
           turno: turno,
+          asesor: 'Prof. Roberto Díaz',
+          grupo: 'B2',
+          modalidad: 'Virtual',
+          tipoAlergia: 'Polen',
+          discapacidadTranstorno: 'Ninguna',
+          orientacionVocacional: 'No',
+          cambioQuiereLograr: 'Prepararme mejor para el examen de admisión',
+          comentarioEspera: 'Busco una preparación integral y personalizada',
           estatus: 'Activo',
           fechaRegistro: '2024-12-16'
+        },
+        {
+          folio: 'ALU003',
+          nombres: 'Carlos Alberto',
+          apellidos: 'Ramírez Sánchez',
+          correoElectronico: 'carlos.ramirez@email.com',
+          telefonoAlumno: '555-0127',
+          municipioComunidad: 'Monterrey',
+          nombreTutor: 'Rosa Sánchez Vázquez',
+          telefonoTutor: '555-0128',
+          nivelAcademico: 'Universidad',
+          gradoSemestre: '1er Semestre',
+          bachillerato: 'Preparatoria UANL',
+          licenciaturaPostula: 'Administración',
+          universidadesPostula: 'UANL, TEC',
+          curso: curso,
+          turno: turno,
+          asesor: 'Prof. Laura Mendoza',
+          grupo: 'C1',
+          modalidad: 'Híbrida',
+          tipoAlergia: 'Mariscos',
+          discapacidadTranstorno: 'Dislexia leve',
+          orientacionVocacional: 'Sí',
+          cambioQuiereLograr: 'Desarrollar habilidades de liderazgo y comunicación',
+          comentarioEspera: 'Quiero complementar mi formación universitaria',
+          estatus: 'Activo',
+          fechaRegistro: '2024-12-17'
         }
       ];
       
@@ -500,6 +561,45 @@ export const AdminProvider = ({ children }) => {
   };
 
   /**
+   * Update student status
+   */
+  const updateStudentStatus = async (studentId, status) => {
+    try {
+      // TODO: BACKEND - Reemplazar con endpoint real cuando esté disponible
+      // const response = await fetch(`/api/admin/students/${studentId}/status`, {
+      //   method: 'PUT',
+      //   headers: {
+      //     'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify({ status })
+      // });
+      
+      // if (!response.ok) {
+      //   throw new Error('Error updating student status');
+      // }
+      
+      // return await response.json();
+      
+      // MOCK - Simular actualización de estado de estudiante
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log(`✏️ Estado del estudiante ${studentId} actualizado a ${status} (MOCK)`);
+      
+      return {
+        success: true,
+        message: 'Estado de estudiante actualizado exitosamente',
+        studentId: studentId,
+        newStatus: status,
+        timestamp: new Date().toISOString()
+      };
+    } catch (err) {
+      console.error('Error updating student status:', err);
+      throw err;
+    }
+  };
+
+  /**
    * Load financial reports data
    */
   const loadFinancialReports = async (dateRange) => {
@@ -714,6 +814,7 @@ export const AdminProvider = ({ children }) => {
     loadStudentsData,
     deleteStudent,
     updateStudent,
+    updateStudentStatus,
     
     // Funciones de pagos
     loadPaymentsData,
