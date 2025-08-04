@@ -1137,7 +1137,7 @@ function ValidacionPagos_Admin_comp() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gradient-to-r from-gray-100 to-gray-50">
                     <tr>
-                      <th className="px-1 xs:px-2 sm:px-4 py-2 xs:py-3 text-left text-[10px] xs:text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                      <th className="px-1 xs:px-2 sm:px-4 py-2 xs:py-3 text-center text-[10px] xs:text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                         Folio
                       </th>
                       <th className="px-1 xs:px-2 sm:px-4 py-2 xs:py-3 text-left text-[10px] xs:text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">
@@ -1169,11 +1169,9 @@ function ValidacionPagos_Admin_comp() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {pagosFiltrados.map((pago, index) => (
                       <tr key={pago.id} className={`transition-colors duration-150 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
-                        <td className="px-1 xs:px-2 sm:px-4 py-2 xs:py-3 border-r border-gray-200">
-                          <div className="text-center">
-                            <div className="text-[10px] xs:text-xs sm:text-sm font-bold text-purple-600 bg-purple-100 px-1 xs:px-2 py-0.5 xs:py-1 rounded-md xs:rounded-lg">
-                              {pago.folio}
-                            </div>
+                        <td className="px-1 xs:px-2 sm:px-4 py-2 xs:py-3 border-r border-gray-200 text-center">
+                          <div className="font-mono text-blue-600 font-medium text-xs xs:text-sm">
+                            {pago.folio}
                           </div>
                         </td>
                         <td className="px-1 xs:px-2 sm:px-4 py-2 xs:py-3 border-r border-gray-200">
@@ -1302,7 +1300,7 @@ function ValidacionPagos_Admin_comp() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                           </svg>
                         </div>
-                        <span className="text-sm font-semibold text-gray-900">{pago.folio}</span>
+                        <span className="font-mono text-blue-600 font-medium text-xs xs:text-sm">{pago.folio}</span>
                       </div>
                     </div>
 

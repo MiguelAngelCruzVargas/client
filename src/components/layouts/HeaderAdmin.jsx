@@ -10,12 +10,17 @@ import { useAdminContext } from "../../context/AdminContext.jsx";
  * Contiene logo de MQerK, título dinámico de página, menú desplegable de notificaciones y perfil de admin
  * LISTO PARA INTEGRACIÓN CON BACKEND - Usa AdminContext para datos del perfil de administrador
  * 
- * Características:
- * - Títulos dinámicos de página basados en la ruta actual
- * - Notificaciones en tiempo real con contador de no leídas
- * - Avatar de administrador con menú desplegable de perfil (preparado para backend)
- * - Diseño responsivo para móvil y escritorio
- * - Indicador de estado en línea para administrador
+ * INTEGRACIÓN ADMINCONTEXT - ESTE COMPONENTE USA:
+ * ✅ adminProfile del AdminContext para:
+ *    - adminProfile.avatar (foto de perfil)
+ *    - adminProfile.name (nombre del administrador)
+ *    - adminProfile.role (rol del administrador)
+ *    - adminProfile.email (correo electrónico)
+ *    - adminProfile.lastLogin (último acceso)
+ * 
+ * PATRÓN DE INTEGRACIÓN:
+ * - AdminContext: Para datos del perfil del administrador
+ * - Props: Para sistema de notificaciones (viene del componente padre)
  */
 export function HeaderAdmin({
   isNotificationsOpen,
@@ -149,7 +154,7 @@ export function HeaderAdmin({
 
   return (
     <header className="relative flex items-center justify-between z-50 bg-gradient-to-r from-[#3d18c3] to-[#4816bf] sticky top-0 left-0 w-full px-3 sm:px-6 py-4">
-      {/* Contenedor del Logo */}
+
       <div className="flex items-center justify-start h-full w-fit z-10 pl-2">
         <Link to={`/admin1/dashboard`} className="flex items-center justify-center">
           <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
@@ -160,7 +165,7 @@ export function HeaderAdmin({
 
       <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col justify-center items-center px-8 md:px-12 lg:px-16 w-auto max-w-4xl">
         
-        {/* Títulos para PC */}
+       
         <div className="hidden sm:flex flex-col items-center">
           <h1 className="text-center text-lg md:text-xl lg:text-2xl text-white font-extrabold mb-1 whitespace-nowrap tracking-wide">
             Asesores Especializados en Educación de Ciencia y Tecnología
@@ -172,7 +177,7 @@ export function HeaderAdmin({
           )}
         </div>
 
-        {/* Títulos para Móvil */}
+      
         <div className="sm:hidden flex flex-col items-center">
           <h1 className="text-center text-base text-white font-extrabold mb-1 whitespace-nowrap tracking-wide">
             MQerK Academy
@@ -185,9 +190,9 @@ export function HeaderAdmin({
         </div>
       </div>
 
-      {/* Contenedor de los iconos de notificación y perfil */}
+    
       <div className="flex items-center justify-end gap-3 sm:gap-4 h-full w-fit z-10">
-        {/* Icono de Notificación con Alternador */}
+     
         <div
           className="relative flex items-center justify-center"
           ref={notificationRef}
@@ -197,7 +202,7 @@ export function HeaderAdmin({
             onClick={toggleNotifications}
             aria-label="Ver notificaciones"
           >
-            {/* Icono de campana (notificaciones) con efecto de pulso al hacer hover */}
+       
             <svg
               xmlns="http://www.w3.org/2000/svg"
               height="28px"
@@ -208,7 +213,7 @@ export function HeaderAdmin({
             >
               <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z" />
             </svg>
-            {/* Indicador de cantidad de notificaciones - solo se muestra si hay notificaciones no leídas */}
+       
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-bounce">
                 {unreadCount}
@@ -216,11 +221,11 @@ export function HeaderAdmin({
             )}
           </button>
 
-          {/* Contenedor de Menú Desplegable de Notificaciones (se muestra condicionalmente) */}
+
           {isNotificationsOpen && (
             <div className="absolute top-full mt-2 w-80 bg-white/50 border border-gray-200/50 rounded-lg shadow-xl z-50 overflow-hidden animate-in slide-in-from-top-2 duration-200 backdrop-blur-xl
                               max-sm:left-1/2 max-sm:-translate-x-1/2 max-sm:w-[calc(100vw-32px)] sm:right-0 sm:max-w-xs">
-              {/* Dropdown header */}
+       
               <div className="bg-gradient-to-r from-purple-600/50 to-purple-800/50 text-white px-4 py-3">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-lg">Notificaciones</h3>
@@ -232,14 +237,14 @@ export function HeaderAdmin({
                 </div>
               </div>
 
-              {/* Mark as read button */}
+       
               {unreadCount > 0 && (
                 <div className="px-4 py-2 bg-gray-50/50 border-b border-gray-200/50">
                   <button
                     onClick={markAllAsRead} 
                     className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors duration-150"
                   >
-                    {/* Double check icon WhatsApp style */}
+              
                     <svg 
                       width="16" 
                       height="16" 
@@ -259,9 +264,9 @@ export function HeaderAdmin({
                 </div>
               )}
 
-              {/* Notifications list */}
+           
               <div className="max-h-64 overflow-y-auto">
-                {/* Show only unread notifications */}
+             
                 {displayedNotifications.length > 0 ? (
                   <ul className="py-1">
                     {displayedNotifications.map((notification) => ( 
@@ -289,7 +294,7 @@ export function HeaderAdmin({
                 )}
               </div>
 
-              {/* Dropdown footer */}
+        
               <div className="px-4 py-2 bg-gray-50/50 border-t border-gray-200/50">
                 <button className="text-xs text-gray-600 hover:text-gray-800 transition-colors duration-150">
                   Ver todas las notificaciones
@@ -299,7 +304,7 @@ export function HeaderAdmin({
           )}
         </div>
 
-        {/* Admin Profile Avatar with Dropdown */}
+   
         <div className="relative flex items-center justify-center" ref={profileRef}>
           <button
             onClick={toggleProfile}
@@ -307,37 +312,38 @@ export function HeaderAdmin({
             aria-label="Menú de perfil del administrador"
           >
             {adminProfile?.avatar ? (
-              // Real admin photo from backend
+              // Foto real del administrador desde el backend (USA ADMINCONTEXT)
               <img
                 src={adminProfile.avatar}
                 alt={`${adminProfile.name} avatar`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  // Fallback to initials if image fails to load
+                  // Fallback a iniciales si la imagen falla al cargar
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'flex';
                 }}
               />
             ) : null}
             
-            {/* Fallback: Admin initials or default avatar */}
+            {/* Fallback: Iniciales del administrador o avatar por defecto (USA ADMINCONTEXT) */}
             <div 
               className={`w-full h-full flex items-center justify-center bg-gradient-to-b from-blue-500 to-blue-600 text-white font-bold text-sm sm:text-base ${adminProfile?.avatar ? 'hidden' : 'flex'}`}
               style={{ display: adminProfile?.avatar ? 'none' : 'flex' }}
             >
+              {/* USA ADMINCONTEXT: adminProfile.name para generar iniciales */}
               {adminProfile ? getInitials(adminProfile.name) : 'AD'}
             </div>
           </button>
           
-          {/* Online status indicator */}
+        
           <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 border-2 border-white rounded-full animate-pulse"></div>
 
-          {/* Profile Dropdown Menu */}
+        
           {isProfileOpen && (
             <div className="absolute top-full mt-2 w-64 bg-white/95 border border-gray-200/50 rounded-lg shadow-xl z-50 overflow-hidden animate-in slide-in-from-top-2 duration-200 backdrop-blur-xl
                             max-sm:left-1/2 max-sm:-translate-x-1/2 max-sm:w-[calc(100vw-32px)] sm:right-0">
               
-              {/* Profile Header */}
+         
               <div className="bg-gradient-to-r from-blue-600/50 to-blue-800/50 text-white px-4 py-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/50 bg-gradient-to-b from-blue-500 to-blue-600 flex items-center justify-center">
@@ -356,19 +362,21 @@ export function HeaderAdmin({
                       className={`w-full h-full flex items-center justify-center text-white font-bold text-sm ${adminProfile?.avatar ? 'hidden' : 'flex'}`}
                       style={{ display: adminProfile?.avatar ? 'none' : 'flex' }}
                     >
+                      {/* USA ADMINCONTEXT: adminProfile.name para generar iniciales */}
                       {adminProfile ? getInitials(adminProfile.name) : 'AD'}
                     </div>
                   </div>
                   <div className="flex-1">
+                    {/* USA ADMINCONTEXT: adminProfile.name y adminProfile.role */}
                     <h3 className="font-semibold text-sm">{adminProfile?.name || 'Administrator'}</h3>
                     <p className="text-xs text-blue-100">{adminProfile?.role || 'Admin'}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Profile Menu Items */}
+           
               <div className="py-2">
-                {/* Profile Settings */}
+              
                 <Link
                   to="/administrativo/configuracion?section=perfil"
                   className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50/50 transition-colors duration-150"
@@ -380,7 +388,7 @@ export function HeaderAdmin({
                   Configuración de Perfil
                 </Link>
 
-                {/* Account Settings */}
+               
                 <Link
                   to="/administrativo/configuracion?section=general"
                   className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50/50 transition-colors duration-150"
@@ -393,17 +401,19 @@ export function HeaderAdmin({
                   Configuración de Cuenta
                 </Link>
 
-                {/* Divider */}
+            
                 <div className="border-t border-gray-200/50 my-2"></div>
 
-                {/* Admin Info */}
+                {/* Información del Administrador (USA ADMINCONTEXT) */}
                 <div className="px-4 py-2">
                   <div className="text-xs text-gray-500 mb-1">Correo Electrónico</div>
+                  {/* USA ADMINCONTEXT: adminProfile.email */}
                   <div className="text-sm text-gray-700">{adminProfile?.email || 'admin@mqerk.academy'}</div>
                 </div>
 
                 <div className="px-4 py-2">
                   <div className="text-xs text-gray-500 mb-1">Último Acceso</div>
+                  {/* USA ADMINCONTEXT: adminProfile.lastLogin */}
                   <div className="text-sm text-gray-700">
                     {adminProfile?.lastLogin 
                       ? new Date(adminProfile.lastLogin).toLocaleDateString('es-ES', {
@@ -418,10 +428,10 @@ export function HeaderAdmin({
                   </div>
                 </div>
 
-                {/* Divider */}
+           
                 <div className="border-t border-gray-200/50 my-2"></div>
 
-                {/* Logout */}
+                {/* Cerrar Sesión */}
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50/50 transition-colors duration-150 w-full text-left"

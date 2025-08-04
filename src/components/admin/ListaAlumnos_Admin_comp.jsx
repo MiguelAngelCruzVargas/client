@@ -876,30 +876,27 @@ function ListaAlumnos_Admin_comp() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gradient-to-r from-gray-100 to-gray-50">
                   <tr>
-                    <th className="px-2 xs:px-3 sm:px-4 py-3 xs:py-4 text-left text-xs xs:text-sm font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">
-                      <div className="flex flex-col space-y-1">
-                        <span>Folio</span>
-                        <span className="text-gray-500 font-normal">ID</span>
-                      </div>
+                    <th className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-center text-xs xs:text-sm font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 w-24 xs:w-28 sm:w-32">
+                      Folio
                     </th>
-                    <th className="px-2 xs:px-3 sm:px-4 py-3 xs:py-4 text-left text-xs xs:text-sm font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-left text-xs xs:text-sm font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       <div className="flex flex-col space-y-1">
                         <span>Estudiante</span>
                         <span className="text-gray-500 font-normal">Información Básica</span>
                       </div>
                     </th>
-                    <th className="px-3 xs:px-4 sm:px-6 py-3 xs:py-4 text-left text-xs xs:text-sm font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-left text-xs xs:text-sm font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       <div className="flex flex-col space-y-1">
                         <span>Tutor</span>
                         <span className="text-gray-500 font-normal">Contacto</span>
                       </div>
                     </th>
-                    <th className="px-1 xs:px-2 py-3 xs:py-4 text-center text-xs xs:text-sm font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 w-20">
+                    <th className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-center text-xs xs:text-sm font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 w-20">
                       <div className="flex flex-col space-y-1">
                         <span>Estado</span>
                       </div>
                     </th>
-                    <th className="px-2 xs:px-3 sm:px-4 py-3 xs:py-4 text-center text-xs xs:text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-center text-xs xs:text-sm font-bold text-gray-700 uppercase tracking-wider">
                       <div className="flex flex-col space-y-1">
                         <span>Acciones</span>
                         <span className="text-gray-500 font-normal">Gestionar</span>
@@ -911,19 +908,14 @@ function ListaAlumnos_Admin_comp() {
                   {alumnosFiltrados.map((alumno, index) => (
                     <tr key={alumno.folio} className={`hover:bg-gray-50 transition-colors duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
                       {/* Columna Folio */}
-                      <td className="px-2 xs:px-3 sm:px-4 py-3 xs:py-4 border-r border-gray-200">
-                        <div className="text-center">
-                          <div className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-md inline-block">
-                            {alumno.folio}
-                          </div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            {alumno.fechaRegistro}
-                          </div>
+                      <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 border-r border-gray-200 text-center w-24 xs:w-28 sm:w-32">
+                        <div className="font-mono text-blue-600 font-medium text-xs xs:text-sm">
+                          {alumno.folio}
                         </div>
                       </td>
                       
                       {/* Columna Estudiante */}
-                      <td className="px-2 xs:px-3 sm:px-4 py-3 xs:py-4 border-r border-gray-200">
+                      <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 border-r border-gray-200">
                         <div className="flex items-center space-x-3">
                           <div className="flex-shrink-0">
                             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-md">
@@ -955,7 +947,7 @@ function ListaAlumnos_Admin_comp() {
                       </td>
                       
                       {/* Columna Tutor */}
-                      <td className="px-3 xs:px-4 sm:px-6 py-3 xs:py-4 border-r border-gray-200">
+                      <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 border-r border-gray-200">
                         <div className="space-y-1">
                           <div className="text-sm font-medium text-gray-900">
                             {alumno.nombreTutor}
@@ -970,7 +962,7 @@ function ListaAlumnos_Admin_comp() {
                       </td>
                       
                       {/* Columna Estado */}
-                      <td className="px-1 xs:px-2 py-3 xs:py-4 border-r border-gray-200 w-20">
+                      <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 border-r border-gray-200 w-20">
                         <div className="flex flex-col items-center space-y-1">
                           {getStatusBadge(alumno.estatus)}
                           {/* Dropdown para cambiar estatus */}
@@ -1009,7 +1001,7 @@ function ListaAlumnos_Admin_comp() {
                       </td>
                       
                       {/* Columna Acciones */}
-                      <td className="px-2 xs:px-3 sm:px-4 py-3 xs:py-4 text-center">
+                      <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-center">
                         <div className="flex flex-col space-y-2">
                           <button 
                             onClick={() => handleVerPerfil(alumno)}

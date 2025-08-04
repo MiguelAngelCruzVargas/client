@@ -959,7 +959,7 @@ export function ComprobanteRecibo() {
                                                 }`}>
                                     {/* Columna Folio */}
                                     <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-xs xs:text-sm text-gray-900 text-center border-r border-gray-200">
-                                        <div className="font-mono text-blue-600 font-medium">{comprobante.folio || generateFolio(comprobante.cursoComprado)}</div>
+                                        <div className="font-mono text-blue-600 font-medium text-xs xs:text-sm">{comprobante.folio || generateFolio(comprobante.cursoComprado)}</div>
                                     </td>
                                     
                                     {/* Columna Nombre del Alumno */}

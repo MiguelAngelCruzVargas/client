@@ -333,6 +333,7 @@ export function Configuracion_Admin_comp() {
     const file = e.target.files[0];
     if (file) {
       // Validar tipo de archivo
+      // puedes cambiar el tamño de archivos aceptados va ?
       if (!file.type.startsWith('image/')) {
         setMessage('Por favor selecciona un archivo de imagen válido');
         setTimeout(() => setMessage(''), 4000);
