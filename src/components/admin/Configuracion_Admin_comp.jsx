@@ -1,16 +1,20 @@
 /**
  * Componente de Configuración de Administrador
  * 
- * Interfaz de configuración del sistema administrativo para gestionar configuraciones de la plataforma.
+ * PATRÓN DE INTEGRACIÓN: HÍBRIDO (AdminContext + API Directa)
+ * - PERFIL PERSONAL: Usa AdminContext (updateAdminProfile, uploadAdminAvatar, adminProfile)
+ * - CONFIGURACIONES DEL SISTEMA: Usa APIs directas (/api/admin/config, /api/admin/cambiar-password)
+ 
  * APIs de backend a implementar:
  * - GET /api/admin/config - Obtener configuración del sistema
  * - PUT /api/admin/config - Actualizar configuración del sistema
  * - POST /api/admin/config/backup - Crear respaldo de configuración
  * - GET /api/admin/config/logs - Obtener logs de cambios de configuración
- * - PUT /api/admin/perfil - Actualizar perfil del administrador
+ * - PUT /api/admin/perfil - Actualizar perfil del administrador (VIA AdminContext)
  * - PUT /api/admin/cambiar-password - Cambiar contraseña del administrador
  */
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAdminContext } from '../../context/AdminContext.jsx';
 
 // Componente de pantalla de carga simple (estilo consistente con otros componentes)
@@ -36,6 +40,7 @@ function LoadingScreen({ onComplete }) {
 }
 
 export function Configuracion_Admin_comp() {
+  const location = useLocation(); // Hook para obtener parámetros de URL
   const [isLoading, setIsLoading] = useState(true);
   // Datos de configuración inicial del sistema
   const [configuration, setConfiguration] = useState({
@@ -75,16 +80,22 @@ export function Configuracion_Admin_comp() {
   // Estados de control de la interfaz
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const [activeSection, setActiveSection] = useState('perfil');
+  
+  // Leer parámetros de URL para establecer la sección activa
+  const urlParams = new URLSearchParams(location.search);
+  const sectionParam = urlParams.get('section');
+  const [activeSection, setActiveSection] = useState(sectionParam || 'perfil');
 
-  // Contexto del administrador
+  // Contexto del administrador - INTEGRACIÓN AdminContext
+  // USADO PARA: Gestión de perfil del admin (foto, datos personales, actualización)
+  // AdminContext provee: adminProfile, updateAdminProfile, uploadAdminAvatar
   const { 
     isLoading: contextLoading,
     error,
     lastUpdated,
-    adminProfile,
-    updateAdminProfile,
-    uploadAdminAvatar
+    adminProfile,         // ✅ USADO: Datos del perfil del admin
+    updateAdminProfile,   // ✅ USADO: Función para actualizar perfil personal
+    uploadAdminAvatar     // ✅ USADO: Función para subir foto de perfil
   } = useAdminContext();
 
   // Función para manejar la finalización de la carga
@@ -92,7 +103,8 @@ export function Configuracion_Admin_comp() {
     setIsLoading(false);
   };
 
-  // Efecto para cargar datos del perfil desde el contexto
+  // Efecto para cargar datos del perfil desde AdminContext
+  // INTEGRACIÓN: adminProfile viene del AdminContext y se mapea a personalData local
   useEffect(() => {
     if (adminProfile) {
       setPersonalData({
@@ -139,14 +151,24 @@ export function Configuracion_Admin_comp() {
     loadConfigurations();
   }, []);
 
+  // Efecto para actualizar la sección activa cuando cambien los parámetros de URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const sectionParam = urlParams.get('section');
+    if (sectionParam && (sectionParam === 'perfil' || sectionParam === 'general' || sectionParam === 'seguridad')) {
+      setActiveSection(sectionParam);
+    }
+  }, [location.search]);
+
   // Función para guardar configuración general del sistema
+  // PATRÓN: API DIRECTA (no AdminContext) - configuraciones específicas del sistema
   const handleGuardarConfiguracion = async () => {
     setSaving(true);
     setMessage(''); // Limpiar mensaje anterior
     
     try {
-      // TODO: Implementar llamada al backend
-      // const response = await fetch('/api/admin/configuraciones', {
+      // TODO: Implementar llamada al backend - API directa para configuraciones del sistema
+      // const response = await fetch('/api/admin/config', {
       //   method: 'PUT',
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify(configuration)
@@ -168,6 +190,7 @@ export function Configuracion_Admin_comp() {
   };
 
   // Función para actualizar contraseña del administrador
+  // PATRÓN: API DIRECTA (no AdminContext) - funcionalidad específica de cambio de contraseña
   const handleUpdatePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setMessage('Las contraseñas no coinciden');
@@ -185,7 +208,7 @@ export function Configuracion_Admin_comp() {
     setMessage(''); // Limpiar mensaje anterior
     
     try {
-      // TODO: Implementar llamada al backend
+      // TODO: Implementar llamada al backend - API directa para cambio de contraseña
       // const response = await fetch('/api/admin/cambiar-password', {
       //   method: 'PUT',
       //   headers: { 'Content-Type': 'application/json' },
@@ -212,6 +235,7 @@ export function Configuracion_Admin_comp() {
   };
 
   // Función para actualizar datos personales del administrador
+  // INTEGRACIÓN AdminContext: Usa updateAdminProfile() y uploadAdminAvatar() del contexto
   const handleUpdatePersonalData = async () => {
     if (!personalData.nombre || !personalData.apellidos || !personalData.email) {
       setMessage('Nombre, apellidos y correo son obligatorios');
@@ -238,10 +262,10 @@ export function Configuracion_Admin_comp() {
         phone: personalData.telefono
       };
 
-      // Si hay una nueva foto, subirla primero
+      // Si hay una nueva foto, subirla primero usando AdminContext
       let avatarUrl = personalData.fotoPreview;
       if (personalData.foto) {
-        const uploadResult = await uploadAdminAvatar(personalData.foto);
+        const uploadResult = await uploadAdminAvatar(personalData.foto); // ✅ AdminContext function
         if (uploadResult.success) {
           avatarUrl = uploadResult.avatarUrl;
         } else {
@@ -249,8 +273,8 @@ export function Configuracion_Admin_comp() {
         }
       }
 
-      // Actualizar perfil con los nuevos datos
-      const result = await updateAdminProfile({
+      // Actualizar perfil con los nuevos datos usando AdminContext
+      const result = await updateAdminProfile({ // ✅ AdminContext function
         ...profileData,
         avatar: avatarUrl
       });

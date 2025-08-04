@@ -1,21 +1,21 @@
 /**
- * Email Admin Component
+ * Componente Admin de Email
  * 
- * Admin email management interface for communication with students and staff.
- * Backend APIs to implement:
- * - GET /api/admin/emails?folder={inbox|sent|drafts} - Get emails by folder
- * - POST /api/admin/emails/send - Send new email
- * - PUT /api/admin/emails/{id}/read - Mark email as read
- * - DELETE /api/admin/emails/{id} - Delete email
+ * Interfaz de gestión de emails para administradores para comunicación con estudiantes y personal.
+ * APIs de Backend a implementar:
+ * - GET /api/admin/emails?folder={inbox|sent|drafts} - Obtener emails por carpeta
+ * - POST /api/admin/emails/send - Enviar nuevo email
+ * - PUT /api/admin/emails/{id}/read - Marcar email como leído
+ * - DELETE /api/admin/emails/{id} - Eliminar email
  */
 import React, { useState, useEffect } from 'react';
 import { useAdminContext } from '../../context/AdminContext.jsx';
 
-export function Email_Admin_comp() {
+function Email_Admin_comp() {
   const [emails, setEmails] = useState([]);
-  const [selectedEmail, setSelectedEmail] = useState(null);
-  const [currentView, setCurrentView] = useState('inbox'); // 'inbox', 'compose', 'sent'
-  const [newEmail, setNewEmail] = useState({
+  const [emailSeleccionado, setEmailSeleccionado] = useState(null);
+  const [vistaActual, setVistaActual] = useState('bandeja'); // 'bandeja', 'redactar', 'enviados'
+  const [nuevoEmail, setNuevoEmail] = useState({
     para: '',
     asunto: '',
     mensaje: '',
@@ -28,7 +28,7 @@ export function Email_Admin_comp() {
     lastUpdated
   } = useAdminContext();
 
-  // Sample data (this will come from backend)
+  // Datos de ejemplo (esto vendrá del backend)
   useEffect(() => {
     setTimeout(() => {
       setEmails([
@@ -88,7 +88,7 @@ export function Email_Admin_comp() {
           etiqueta: 'general'
         }
       ]);
-      setCargando(false);
+      // Los datos se cargan desde el contexto AdminContext
     }, 1000);
   }, []);
 
@@ -131,7 +131,7 @@ export function Email_Admin_comp() {
     setVistaActual('bandeja');
   };
 
-  if (cargando) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -242,9 +242,7 @@ export function Email_Admin_comp() {
                         setEmailSeleccionado(email);
                         if (!email.leido) handleMarcarComoLeido(email.id);
                       }}
-                      className={`p-6 hover:bg-gray-50 cursor-pointer ${
-                        !email.leido ? 'bg-blue-50' : ''
-                      }`}
+                      className="p-6 bg-white hover:bg-white cursor-pointer border-l-4 border-transparent hover:border-blue-200 transition-colors"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
@@ -292,7 +290,7 @@ export function Email_Admin_comp() {
                     <div 
                       key={email.id}
                       onClick={() => setEmailSeleccionado(email)}
-                      className="p-6 hover:bg-gray-50 cursor-pointer"
+                      className="p-6 bg-white hover:bg-white cursor-pointer border-l-4 border-transparent hover:border-blue-200 transition-colors"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
@@ -488,3 +486,4 @@ export function Email_Admin_comp() {
     </div>
   );
 }
+export default Email_Admin_comp;

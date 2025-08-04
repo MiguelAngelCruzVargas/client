@@ -1,7 +1,16 @@
 /**
  * Componente de Calendario Admin
  * 
- * Calendario administrativo con funcionalidad de recordatorios y gestión de eventos.
+ * PATRÓN DE INTEGRACIÓN: API DIRECTA (NO AdminContext)
+ * - Este componente NO necesita AdminContext porque maneja funcionalidad específica independiente
+ * - Usa APIs directas para calendar/events endpoints
+ * - AdminContext NO tiene funciones de calendario, solo gestión general (students, payments, dashboard)
+ * 
+ * ESTADO: 95% LISTO PARA BACKEND
+ * - Endpoints completamente implementados con fallback a datos mock
+ * - Manejo de errores y loading states completo
+ * - Solo necesita activar backend real y comentar datos de ejemplo
+ * 
  * APIs de backend a implementar:
  * - GET /api/admin/calendar/events?startDate={date}&endDate={date} - Obtener eventos del calendario
  * - POST /api/admin/calendar/events - Crear nuevo evento/recordatorio
@@ -9,7 +18,6 @@
  * - DELETE /api/admin/calendar/events/{id} - Eliminar evento/recordatorio
  */
 import React, { useState, useEffect } from 'react';
-import { useAdminContext } from '../../context/AdminContext.jsx';
 
 export function Calendario_Admin_comp() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -33,13 +41,7 @@ export function Calendario_Admin_comp() {
     recordarMinutos: 15
   });
 
-  const { 
-    // isLoading,
-    error,
-    lastUpdated
-  } = useAdminContext();
-
-  // Funciones de API del backend
+  // Funciones de API del backend - Implementación directa (sin AdminContext)
   const fetchReminders = async (startDate, endDate) => {
     setIsLoading(true);
     setApiError(null);
@@ -198,7 +200,9 @@ export function Calendario_Admin_comp() {
     }
   };
 
-  // Función de datos de ejemplo de respaldo
+  // Función de datos de ejemplo de respaldo 
+  // (para desarrollo si el backend no está disponible) 
+  // y para probar la funcionalidad, las debes de comentar
   const loadSampleData = () => {
     const sampleReminders = [
       {
@@ -358,7 +362,7 @@ export function Calendario_Admin_comp() {
         hora: '',
         tipo: 'personal',
         prioridad: 'media',
-        recordarMinutos: 15
+        recordarMinutos: 15 // primera opción
       });
       setShowNewModal(false);
     } catch (error) {
@@ -424,7 +428,7 @@ export function Calendario_Admin_comp() {
   return (
     <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+       
         <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -474,7 +478,7 @@ export function Calendario_Admin_comp() {
           </div>
         )}
 
-        {/* Loading indicator */}
+       
         {isLoading && (
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
             <div className="flex items-center">
@@ -486,7 +490,7 @@ export function Calendario_Admin_comp() {
           </div>
         )}
 
-        {/* Controles del calendario */}
+      
         <div className="bg-gradient-to-br from-purple-50 to-white rounded-xl shadow-lg border border-purple-200 p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center space-x-4">
@@ -522,10 +526,10 @@ export function Calendario_Admin_comp() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Calendario */}
+        
           <div className="lg:col-span-3">
             <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-              {/* Encabezados de días de la semana */}
+             
               <div className="grid grid-cols-7 bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100">
                 {diasSemana.map((dia) => (
                   <div key={dia} className="px-4 py-3 text-center text-sm font-semibold text-gray-600">
@@ -534,7 +538,7 @@ export function Calendario_Admin_comp() {
                 ))}
               </div>
 
-              {/* Días del calendario */}
+           
               <div className="grid grid-cols-7">
                 {getDaysOfMonth().map((dia, index) => {
                   const recordatoriosDelDia = obtenerRecordatoriosPorFecha(dia.fechaCompleta);
@@ -582,9 +586,9 @@ export function Calendario_Admin_comp() {
             </div>
           </div>
 
-          {/* Panel lateral */}
+        
           <div className="space-y-6">
-            {/* Recordatorios próximos */}
+          
             <div className="bg-gradient-to-br from-green-50 to-white rounded-xl shadow-lg border border-green-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -634,7 +638,7 @@ export function Calendario_Admin_comp() {
               </div>
             </div>
 
-            {/* Leyenda de tipos */}
+        
             <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl shadow-lg border border-blue-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Tipos de Recordatorios</h3>
               <div className="space-y-3">
@@ -669,7 +673,7 @@ export function Calendario_Admin_comp() {
               </div>
             </div>
 
-            {/* Estadísticas */}
+       
             <div className="bg-gradient-to-br from-yellow-50 to-white rounded-xl shadow-lg border border-yellow-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Resumen</h3>
               <div className="space-y-3">
