@@ -169,15 +169,47 @@ export function ComprobanteRecibo() {
     const [activeVespertino, setActiveVespertino] = useState('');
     const [vistaActual, setVistaActual] = useState('pendientes'); // 'pendientes', 'aprobados', 'rechazados'
    
-    // Estados de modales
+    // ==================== ESTADOS PARA MODALES DE CONFIRMACIÓN ====================
+    
+    // MODAL DE ÉXITO (aprobación)
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    
+    // ========== MODAL DE RECHAZO - VARIABLES PRINCIPALES ==========
+    // showRejectModal: boolean - Controla visibilidad del modal de rechazo
+    // USADA EN: Botón "RECHAZAR" → handleRechazar() → confirmarRechazo()
     const [showRejectModal, setShowRejectModal] = useState(false);
+    
+    // currentComprobante: object - Almacena temporalmente el comprobante a procesar
+    // CONTENIDO: Todos los datos del comprobante (id, nombreAlumno, importe, etc.)
+    // USADA EN: Modal de rechazo para mostrar nombre del estudiante
+    // USADA EN: Modal de éxito para mostrar nombre del estudiante aprobado
+    // FLUJO: handleRechazar() → setCurrentComprobante() → Modal muestra datos
     const [currentComprobante, setCurrentComprobante] = useState(null);
+    
+    // motivoRechazo: string - Texto del motivo ingresado por admin
+    // PROPÓSITO: Campo obligatorio para documentar por qué se rechaza
+    // VALIDACIÓN: confirmarRechazo() verifica que no esté vacío con trim()
+    // BACKEND: Se envía al servidor y se almacena en la base de datos
+    // LIMPIEZA: Se resetea a '' cuando se cancela o completa el rechazo
     const [motivoRechazo, setMotivoRechazo] = useState('');
+    
+    // Otros modales
     const [showPdfTip, setShowPdfTip] = useState(false);
     
+    // ==================== ESTADOS PARA EDICIÓN TEMPORAL ====================
+    // PROPÓSITO: Los comprobantes llegan como PDF/imagen SIN datos extraídos automáticamente
+    // PROBLEMA: Extraer datos de PDF/imagen requiere OCR o procesamiento complejo
+    // SOLUCIÓN: Admin ve la imagen y MANUALMENTE ingresa importe/método de pago
+    
+    // FLUJO REAL:
+    // 1. Backend recibe PDF/imagen del estudiante (sin datos estructurados)
+    // 2. Comprobante llega con campos importe="" y metodoPago="" VACÍOS  
+    // 3. Admin abre imagen, lee visualmente los datos y los ingresa aquí
+    // 4. Al aprobar/rechazar, se envían los valores ingresados manualmente al backend
+    // 5. Backend guarda los datos que el admin extrajo manualmente
+    
     // Estados para campos editables (importe y método)
-    const [editableFields, setEditableFields] = useState({}); // Para almacenar valores temporales de edición
+    const [editableFields, setEditableFields] = useState({}); // Para almacenar valores ingresados manualmente por admin
     
     // Estado del visor de comprobantes
     const [modalComprobante, setModalComprobante] = useState({
@@ -196,8 +228,8 @@ export function ComprobanteRecibo() {
             nombreAlumno: "María González López",
             cursoComprado: "EEAU - Grupo V1",
             fechaHora: "2024-07-29 14:30",
-            importe: "1500.00",
-            metodoPago: "Transferencia bancaria",
+            importe: "", // ← VACÍO: Admin debe leer del PDF e ingresar manualmente
+            metodoPago: "", // ← VACÍO: Admin debe leer del PDF e ingresar manualmente
             estado: "pendiente",
             comprobanteUrl: "/src/assets/comprobante-pago-MQ-20250729-0001.pdf"
         },
@@ -207,8 +239,8 @@ export function ComprobanteRecibo() {
             nombreAlumno: "Carlos Hernández Ruiz",
             cursoComprado: "EEAP - Grupo V1",
             fechaHora: "2024-07-29 16:45",
-            importe: "1800.00",
-            metodoPago: "Deposito en efectivo",
+            importe: "", // ← VACÍO: Admin debe leer de la imagen e ingresar manualmente
+            metodoPago: "", // ← VACÍO: Admin debe leer de la imagen e ingresar manualmente
             estado: "pendiente",
             comprobanteUrl: "/src/assets/comprobante-pago-MQ-20250729-0001.png"
         },
@@ -218,8 +250,8 @@ export function ComprobanteRecibo() {
             nombreAlumno: "Ana Patricia Morales",
             cursoComprado: "DIGI-START - Grupo V1",
             fechaHora: "2024-07-29 10:15",
-            importe: "2200.00",
-            metodoPago: "Tarjeta de crédito",
+            importe: "", // ← VACÍO: Admin debe leer del PDF e ingresar manualmente
+            metodoPago: "", // ← VACÍO: Admin debe leer del PDF e ingresar manualmente
             estado: "pendiente",
             comprobanteUrl: "/src/assets/comprobante-pago-MQ-20250729-0001.pdf"
         }
@@ -388,7 +420,13 @@ export function ComprobanteRecibo() {
         return `MQ${courseCode}-${year}-${paddedNumber}`;
     };
 
-    // Manejador para actualizar campos editables
+    // ==================== GESTIÓN DE CAMPOS EDITABLES ====================
+    // IMPORTANTE: El admin puede editar IMPORTE y MÉTODO DE PAGO antes de aprobar/rechazar
+    // Los valores editados se almacenan temporalmente hasta que se procese el comprobante
+    
+    // Manejador para actualizar campos editables (importe y método de pago)
+    // FUNCIÓN: Permite al admin corregir datos incorrectos antes de procesar
+    // ALMACENA: valores temporales en editableFields sin modificar el comprobante original
     const handleFieldChange = (comprobanteId, field, value) => {
         setEditableFields(prev => ({
             ...prev,
@@ -400,6 +438,8 @@ export function ComprobanteRecibo() {
     };
 
     // Obtener valor de campo editable o valor original
+    // LÓGICA: Si el admin editó el campo, devuelve el valor editado
+    //         Si no, devuelve el valor original del comprobante
     const getFieldValue = (comprobante, field) => {
         return editableFields[comprobante.id]?.[field] ?? comprobante[field];
     };
@@ -614,25 +654,67 @@ export function ComprobanteRecibo() {
     ========== FIN LISTA DE ENDPOINTS ==========
     */
     
+    // ==================== ACCIÓN: RECHAZAR COMPROBANTE ====================
+    // Función que inicia el proceso de rechazo de un comprobante
+    // PROPÓSITO: Preparar el modal de confirmación con los datos del comprobante
+    // VARIABLES QUE MODIFICA:
+    //   - setCurrentComprobante(comprobante): Almacena el comprobante a rechazar
+    //   - setShowRejectModal(true): Muestra el modal de confirmación
+    // FLUJO: Botón "RECHAZAR" → handleRechazar() → Modal aparece → confirmarRechazo()
+    
+    // IMPORTANTE: Esta función solo abre el modal de confirmación
+    // La lógica real de rechazo está en confirmarRechazo()
     // TODO: Conectar con API - Endpoint: POST /api/comprobantes/{id}/rechazar
     const handleRechazar = (comprobante) => {
+        // Guardar el comprobante que se va a rechazar para usarlo en el modal
         setCurrentComprobante(comprobante);
+        // Mostrar el modal de confirmación de rechazo
         setShowRejectModal(true);
     };
 
+    // ==================== CONFIRMAR RECHAZO CON MOTIVO ====================
+    // Esta función ejecuta el rechazo definitivo del comprobante
+    // VARIABLES QUE USA:
+    //   - motivoRechazo: string - Motivo ingresado por admin (OBLIGATORIO)
+    //   - currentComprobante: object - Comprobante a rechazar
+    //   - editableFields: object - Campos editados por admin (importe/metodoPago)
+    // VARIABLES QUE MODIFICA:
+    //   - setComprobantes(): Remueve de pendientes
+    //   - setComprobantesRechazados(): Añade a rechazados
+    //   - setEditableFields(): Limpia campos editados
+    //   - setShowRejectModal(false): Cierra modal
+    //   - setCurrentComprobante(null): Limpia comprobante actual
+    //   - setMotivoRechazo(''): Limpia motivo
+    // FLUJO: Modal → confirmarRechazo() → Validación → Procesamiento → Cierre
+    
+    // REQUIERE: motivo de rechazo obligatorio
+    // PROCESA: campos editables (importe y método de pago) antes del rechazo
+    // BACKEND: debe enviar los datos actualizados al servidor
+    
     // TODO: Conectar con API - Enviar motivo de rechazo al backend
     const confirmarRechazo = async () => {
+        // VALIDACIÓN OBLIGATORIA: El motivo no puede estar vacío
         if (!motivoRechazo.trim()) {
             alert('Por favor, ingresa el motivo del rechazo');
             return;
         }
         
         try {
-            // Obtener los valores editados o usar los originales
+            // OBTENER VALORES DE CAMPOS EDITABLES
+            // Si el admin editó el importe o método de pago, usar esos valores
+            // Si no, usar los valores originales del comprobante
             const importeActualizado = getFieldValue(currentComprobante, 'importe');
             const metodoPagoActualizado = getFieldValue(currentComprobante, 'metodoPago');
             
-            // TODO: Llamada a API
+            // TODO: LLAMADA AL BACKEND - ENDPOINT: POST /api/comprobantes/{id}/rechazar
+            // DEBE ENVIAR:
+            // - motivo: texto del motivo de rechazo
+            // - fechaRechazo: timestamp actual
+            // - adminId: ID del administrador que rechaza
+            // - importe: valor actualizado (editado o original)
+            // - metodoPago: valor actualizado (editado o original)
+            // - folio: folio generado o existente
+            
             // await api.post(`/comprobantes/${currentComprobante.id}/rechazar`, {
             //     motivo: motivoRechazo,
             //     fechaRechazo: new Date().toISOString(),
@@ -642,26 +724,29 @@ export function ComprobanteRecibo() {
             //     folio: currentComprobante.folio || generateFolio(currentComprobante.cursoComprado)
             // });
             
+            // SIMULACIÓN LOCAL - ELIMINAR CUANDO SE CONECTE EL BACKEND
             const comprobanteRechazado = {
                 ...currentComprobante,
                 folio: currentComprobante.folio || generateFolio(currentComprobante.cursoComprado),
-                importe: importeActualizado,
-                metodoPago: metodoPagoActualizado,
+                importe: importeActualizado,      // ← Valor editado por admin
+                metodoPago: metodoPagoActualizado, // ← Valor editado por admin
                 estado: 'rechazado',
-                motivoRechazo: motivoRechazo,
+                motivoRechazo: motivoRechazo,     // ← Motivo ingresado por admin
                 fechaRechazo: new Date().toLocaleString()
             };
             
+            // ACTUALIZAR ESTADOS: Mover comprobante de pendientes a rechazados
             setComprobantes(prev => prev.filter(c => c.id !== currentComprobante.id));
             setComprobantesRechazados(prev => [...prev, comprobanteRechazado]);
             
-            // Limpiar campos editables para este comprobante
+            // LIMPIAR CAMPOS EDITABLES para este comprobante
             setEditableFields(prev => {
                 const newFields = { ...prev };
                 delete newFields[currentComprobante.id];
                 return newFields;
             });
             
+            // CERRAR MODAL Y LIMPIAR VARIABLES
             setShowRejectModal(false);
             setCurrentComprobante(null);
             setMotivoRechazo('');
@@ -671,14 +756,29 @@ export function ComprobanteRecibo() {
         }
     };
 
+    // ==================== ACCIÓN: APROBAR/VALIDAR COMPROBANTE ====================
+    // Función que ejecuta la aprobación definitiva del comprobante
+    // PROCESA: campos editables (importe y método de pago) antes de aprobar
+    // BACKEND: debe enviar los datos actualizados al servidor
+    // RESULTADO: comprobante se mueve de pendientes a aprobados
+    
     // TODO: Conectar con API - Endpoint: POST /api/comprobantes/{id}/aprobar
     const handleValidar = async (comprobante) => {
         try {
-            // Obtener los valores editados o usar los originales
+            // OBTENER VALORES DE CAMPOS EDITABLES
+            // Si el admin editó el importe o método de pago, usar esos valores
+            // Si no, usar los valores originales del comprobante
             const importeActualizado = getFieldValue(comprobante, 'importe');
             const metodoPagoActualizado = getFieldValue(comprobante, 'metodoPago');
             
-            // TODO: Llamada a API
+            // TODO: LLAMADA AL BACKEND - ENDPOINT: POST /api/comprobantes/{id}/aprobar
+            // DEBE ENVIAR:
+            // - fechaAprobacion: timestamp actual
+            // - adminId: ID del administrador que aprueba
+            // - importe: valor actualizado (editado o original)
+            // - metodoPago: valor actualizado (editado o original)
+            // - folio: folio generado o existente
+            
             // await api.post(`/comprobantes/${comprobante.id}/aprobar`, {
             //     fechaAprobacion: new Date().toISOString(),
             //     adminId: sessionStorage.getItem('adminId'),
@@ -687,15 +787,17 @@ export function ComprobanteRecibo() {
             //     folio: comprobante.folio || generateFolio(comprobante.cursoComprado)
             // });
             
+            // SIMULACIÓN LOCAL - ELIMINAR CUANDO SE CONECTE EL BACKEND
             const comprobanteAprobado = {
                 ...comprobante,
                 folio: comprobante.folio || generateFolio(comprobante.cursoComprado),
-                importe: importeActualizado,
-                metodoPago: metodoPagoActualizado,
+                importe: importeActualizado,      // ← Valor editado por admin
+                metodoPago: metodoPagoActualizado, // ← Valor editado por admin
                 estado: 'aprobado',
                 fechaAprobacion: new Date().toLocaleString()
             };
             
+            // Mover comprobante de pendientes a aprobados
             setComprobantes(prev => prev.filter(c => c.id !== comprobante.id));
             setComprobantesAprobados(prev => [...prev, comprobanteAprobado]);
             
@@ -706,6 +808,10 @@ export function ComprobanteRecibo() {
                 return newFields;
             });
             
+            // ========== PREPARAR DATOS PARA MODAL DE ÉXITO ==========
+            // IMPORTANTE: Establecer currentComprobante con datos actualizados
+            // PROPÓSITO: El modal de éxito necesita mostrar el nombre del estudiante aprobado
+            // CONTIENE: Todos los datos del comprobante incluyendo valores editados por admin
             setCurrentComprobante(comprobanteAprobado);
             setShowSuccessModal(true);
         } catch (error) {
@@ -887,26 +993,55 @@ export function ComprobanteRecibo() {
                 </div>
             </div>
 
-            {/* ==================== TABLA DE COMPROBANTES ==================== */}
+            {/* ======================================================================== */}
+            {/*                        TABLA DE COMPROBANTES                          */}
+            {/*                     CENTRO DE PROCESAMIENTO                           */}
+            {/* ======================================================================== */}
+      
+        
+            {/* VARIABLES PRINCIPALES:
+                - vistaActual: string - Estado actual de la vista ('pendientes'|'aprobados'|'rechazados')
+                - comprobantes: array - Lista de comprobantes pendientes
+                - comprobantesAprobados: array - Lista de comprobantes aprobados
+                - comprobantesRechazados: array - Lista de comprobantes rechazados
+                - editableFields: object - Campos editados temporalmente por admin
+            */}
+          
+            {/* BACKEND ENDPOINTS:
+                - GET /api/comprobantes/pendientes → Carga tabla pendientes
+                - GET /api/comprobantes/aprobados → Carga tabla aprobados  
+                - GET /api/comprobantes/rechazados → Carga tabla rechazados
+                - POST /api/comprobantes/{id}/aprobar → Procesa aprobación
+                - POST /api/comprobantes/{id}/rechazar → Procesa rechazo
+            */}
             {showContent && (
                 <div className="flex-1 px-2 xs:px-4 sm:px-6 pb-4 xs:pb-6">
                     <div className="w-full max-w-7xl mx-auto">
                         <div className="bg-white rounded-lg xs:rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                            {/* ========== HEADER DINÁMICO DE LA TABLA ========== */}
+                            {/* FUNCIÓN: getTituloVista() - Genera título según vista activa */}
                             <div className="px-4 xs:px-6 py-4 bg-gray-50 border-b border-gray-200">
                                 <h3 className="text-lg font-semibold text-gray-800">{getTituloVista()}</h3>
                             </div>
                             
                             <div className="overflow-x-auto">
+                                {/* ========== TABLA RESPONSIVA CON COLUMNAS DINÁMICAS ========== */}
+                                {/* DISEÑO: Responsive con min-width para evitar colapso en móviles */}
                                 <table className="w-full min-w-[1000px] xs:min-w-[1100px] sm:min-w-[1200px]">
+                                    {/* ========== ENCABEZADOS DINÁMICOS SEGÚN VISTA ========== */}
+                                    {/* COLORES: Verde para aprobados, Rojo para rechazados, Gris para pendientes */}
                                     <thead>
                                         <tr className={`${vistaActual === 'aprobados' ? 'bg-gradient-to-r from-green-700 to-green-800' : 
                                                         vistaActual === 'rechazados' ? 'bg-gradient-to-r from-red-700 to-red-800' : 
                                                         'bg-gradient-to-r from-gray-800 to-gray-900'} text-white`}>
+                                            {/* COLUMNAS BÁSICAS (siempre visibles) */}
                                             <th className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-center text-xs xs:text-sm font-semibold uppercase tracking-wider border-r border-gray-300">Folio</th>
                                             <th className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-center text-xs xs:text-sm font-semibold uppercase tracking-wider border-r border-gray-300">Nombre del Alumno</th>
                                             <th className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-center text-xs xs:text-sm font-semibold uppercase tracking-wider border-r border-gray-300">Fecha y Hora</th>
                                             <th className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-center text-xs xs:text-sm font-semibold uppercase tracking-wider border-r border-gray-300">Importe</th>
                                             <th className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-center text-xs xs:text-sm font-semibold uppercase tracking-wider border-r border-gray-300">Método</th>
+                                            
+                                            {/* COLUMNAS CONDICIONALES según vista activa */}
                                             {vistaActual === 'rechazados' && (
                                                 <th className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-center text-xs xs:text-sm font-semibold uppercase tracking-wider border-r border-gray-300">Motivo Rechazo</th>
                                             )}
@@ -922,7 +1057,12 @@ export function ComprobanteRecibo() {
                                             )}
                                         </tr>
                                     </thead>
+
+                                    {/* ========== CUERPO DE LA TABLA - PROCESAMIENTO DINÁMICO ========== */}
+                                    {/* FUNCIÓN: getComprobantesActuales() - Filtra comprobantes según vista */}
+                                    {/* DATOS MOSTRADOS: Según vistaActual (pendientes/aprobados/rechazados) */}
                                     <tbody className="bg-white divide-y divide-gray-200">
+                                        {/* ========== ESTADO VACÍO - SIN COMPROBANTES ========== */}
                                         {getComprobantesActuales().length === 0 ? (
                                             <tr>
                                                 <td colSpan={vistaActual === 'rechazados' ? '8' : vistaActual === 'aprobados' ? '7' : '7'} className="px-4 xs:px-6 py-12 xs:py-16 text-center text-gray-500">
@@ -952,27 +1092,47 @@ export function ComprobanteRecibo() {
                                                 </td>
                                             </tr>
                                         ) : (
+                                            /* ========== FILAS DE COMPROBANTES - RENDERIZADO DINÁMICO ========== */
+                                            /* MAPEO: Itera sobre comprobantes filtrados por vista activa */
+                                            /* ESTADOS VISUALES: Fondo verde para aprobados, rojo para rechazados */
                                             getComprobantesActuales().map((comprobante) => (
                                                 <tr key={comprobante.id} className={`hover:bg-gray-50 transition-colors duration-150 ${
                                                     vistaActual === 'rechazados' ? 'bg-red-50/30' : 
                                                     vistaActual === 'aprobados' ? 'bg-green-50/30' : ''
                                                 }`}>
-                                    {/* Columna Folio */}
+                                    
+                                    {/* ========== COLUMNAS DE DATOS BÁSICOS (SOLO LECTURA) ========== */}
+                                    
+                                    {/* COLUMNA FOLIO - Generado automáticamente */}
                                     <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-xs xs:text-sm text-gray-900 text-center border-r border-gray-200">
                                         <div className="font-mono text-blue-600 font-medium text-xs xs:text-sm">{comprobante.folio || generateFolio(comprobante.cursoComprado)}</div>
                                     </td>
                                     
-                                    {/* Columna Nombre del Alumno */}
+                                    {/* COLUMNA NOMBRE - Del estudiante que envió el comprobante */}
                                     <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-xs xs:text-sm text-gray-900 text-center border-r border-gray-200">
                                         <div className="font-medium">{comprobante.nombreAlumno}</div>
                                     </td>
                                     
-                                    {/* Columna Fecha y Hora  */}
+                                    {/* COLUMNA FECHA - Cuándo se subió el comprobante */}
                                     <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 whitespace-nowrap text-xs xs:text-sm text-gray-900 text-center border-r border-gray-200">
                                         <div className="font-medium">{comprobante.fechaHora}</div>
                                     </td>
                                     
-                                    {/* Columna Importe - Campo editable */}
+                                    {/* ========== COLUMNAS EDITABLES (SOLO EN PENDIENTES) ========== */}
+                                    
+                                    {/* ========== COLUMNA IMPORTE - CAMPO EDITABLE ========== */}
+                             
+                                    {/* VARIABLES:
+                                        - getFieldValue(): Obtiene valor editado o original
+                                        - handleFieldChange(): Actualiza editableFields temporalmente
+                                        - editableFields[id]: Almacena cambios antes de procesar
+                                    */}
+                                    {/* PROCESO:
+                                        1. Admin ve valor original del comprobante
+                                        2. Admin edita en input → handleFieldChange() → editableFields
+                                        3. Admin RECHAZA/VALIDA → getFieldValue() → Valor actualizado al backend
+                                    */}
+                              
                                     <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-xs xs:text-sm text-center border-r border-gray-200">
                                         {vistaActual === 'pendientes' ? (
                                             <input
@@ -987,7 +1147,8 @@ export function ComprobanteRecibo() {
                                         )}
                                     </td>
                                     
-                                    {/* Columna Método - Campo editable */}
+                                    {/* ========== COLUMNA MÉTODO DE PAGO - CAMPO EDITABLE ========== */}
+                              
                                     <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-xs xs:text-sm text-center border-r border-gray-200">
                                         {vistaActual === 'pendientes' ? (
                                             <input
@@ -1000,7 +1161,11 @@ export function ComprobanteRecibo() {
                                         ) : (
                                             <div className="font-medium">{comprobante.metodoPago}</div>
                                         )}
-                                    </td>                                                  
+                                    </td>
+                                    
+                                    {/* ========== COLUMNAS CONDICIONALES SEGÚN ESTADO ========== */}
+                                    
+                                    {/* COLUMNA MOTIVO RECHAZO - Solo visible en vista 'rechazados' */}
                                     {vistaActual === 'rechazados' && (
                                         <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-xs xs:text-sm text-red-700 text-center border-r border-gray-200">
                                             <div className="bg-red-100 px-2 py-1 rounded-md max-w-xs mx-auto">
@@ -1009,31 +1174,69 @@ export function ComprobanteRecibo() {
                                         </td>
                                     )}
                                     
+                                    {/* COLUMNA FECHA APROBACIÓN - Solo visible en vista 'aprobados' */}
                                     {vistaActual === 'aprobados' && (
                                         <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 whitespace-nowrap text-xs xs:text-sm text-green-700 font-medium text-center border-r border-gray-200">
                                             {comprobante.fechaAprobacion}
                                         </td>
                                     )}
                                     
-                                    {vistaActual === 'rechazados' && (
-                                        <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 whitespace-nowrap text-xs xs:text-sm text-red-700 font-medium text-center border-r border-gray-200">
-                                            {comprobante.fechaRechazo}
-                                        </td>
-                                    )}
-                                    
+                                    {/* COLUMNA VER COMPROBANTE - Siempre visible */}
                                     <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 whitespace-nowrap text-xs xs:text-sm text-center">
                                         <button onClick={() => handleVerComprobante(comprobante)} className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-150 px-2 xs:px-3 py-1 rounded-lg hover:bg-blue-50">
                                             Ver comprobante
                                         </button>
                                     </td>
                                     
-                                    {/* Botones de acción solo para pendientes */}
+                                    {/* ========== COLUMNA MOTIVO RECHAZO - Solo visible en vista 'rechazados' ========== */}
+                                    {vistaActual === 'rechazados' && (
+                                        <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 text-xs xs:text-sm text-red-700 text-center border-r border-gray-200">
+                                            <div className="bg-red-100 px-2 py-1 rounded-md max-w-xs mx-auto">
+                                                <span className="font-medium">{comprobante.motivoRechazo}</span>
+                                            </div>
+                                        </td>
+                                    )}
+                                    
+                                    {/* ========== COLUMNA FECHA APROBACIÓN - Solo visible en vista 'aprobados' ========== */}
+                                    {vistaActual === 'aprobados' && (
+                                        <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 whitespace-nowrap text-xs xs:text-sm text-green-700 font-medium text-center border-r border-gray-200">
+                                            {comprobante.fechaAprobacion}
+                                        </td>
+                                    )}
+                                    
+                                    {/* ========== COLUMNA FECHA RECHAZO - Solo visible en vista 'rechazados' ========== */}
+                                    {vistaActual === 'rechazados' && (
+                                        <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 whitespace-nowrap text-xs xs:text-sm text-red-700 font-medium text-center border-r border-gray-200">
+                                            {comprobante.fechaRechazo}
+                                        </td>
+                                    )}
+                                    
+                                    {/* ========== BOTONES DE ACCIÓN - CENTRO DE PROCESAMIENTO ========== */}
+                                    {/* SOLO VISIBLE EN VISTA 'PENDIENTES' - Aquí es donde se procesa todo */}
+                                    {/* FUNCIONES PRINCIPALES:
+                                        - handleRechazar(): Abre modal de motivo → confirmarRechazo() → RECHAZADOS
+                                        - handleValidar(): Procesa inmediatamente → Modal éxito → APROBADOS
+                                    */}
+                                    {/* VARIABLES QUE USAN:
+                                        - getFieldValue(): Obtiene valores editados de importe/método
+                                        - editableFields: Almacena cambios temporales del admin
+                                    */}
+                                 
                                     {vistaActual === 'pendientes' && (
                                         <td className="px-2 xs:px-4 sm:px-6 py-3 xs:py-4 whitespace-nowrap text-xs xs:text-sm text-center">
                                             <div className="flex gap-1 xs:gap-2 sm:gap-3 justify-center">
+                                                {/* ========== BOTÓN RECHAZAR ========== */}
+                                                {/* ACCIÓN: handleRechazar(comprobante) */}
+                                                {/* RESULTADO: Abre modal → Motivo obligatorio → confirmarRechazo() */}
+                                                {/* DESTINO: Array comprobantesRechazados */}
                                                 <button onClick={() => handleRechazar(comprobante)} className="px-2 xs:px-3 sm:px-4 py-1 xs:py-2 bg-red-500 hover:bg-red-600 text-white text-[10px] xs:text-xs font-semibold rounded-md xs:rounded-lg transition-colors duration-150">
                                                     RECHAZAR
                                                 </button>
+                                                
+                                                {/* ========== BOTÓN VALIDAR ========== */}
+                                                {/* ACCIÓN: handleValidar(comprobante) */}
+                                         
+                                                {/* DESTINO: Array comprobantesAprobados */}
                                                 <button onClick={() => handleValidar(comprobante)} className="px-2 xs:px-3 sm:px-4 py-1 xs:py-2 bg-green-500 hover:bg-green-600 text-white text-[10px] xs:text-xs font-semibold rounded-md xs:rounded-lg transition-colors duration-150">
                                                     VALIDAR
                                                 </button>
@@ -1050,6 +1253,8 @@ export function ComprobanteRecibo() {
                     </div>
                 </div>
             )}
+
+    
 
             {/***************************************************************/}
                 {/* INICIO: Modal de visualización de comprobante  */}
@@ -1132,25 +1337,56 @@ export function ComprobanteRecibo() {
                     {/* FIN: Modal de visualización de comprobante      */}
             {/***************************************************************/}
 
-            {/* Modales de Confirmación  */}
+            {/* ======================================================================== */}
+            {/*                       MODALES DE CONFIRMACIÓN                         */}
+            {/* ======================================================================== */}
+            
+            {/* ==================== MODAL DE CONFIRMACIÓN DE RECHAZO ==================== */}
+       
+            {/* VARIABLES NECESARIAS:
+                - showRejectModal: boolean - Controla visibilidad del modal
+                - currentComprobante: object - Datos del comprobante a rechazar
+                - motivoRechazo: string - Motivo ingresado por admin (OBLIGATORIO)
+                - setShowRejectModal: function - Ocultar/mostrar modal
+                - setMotivoRechazo: function - Actualizar motivo de rechazo
+                - confirmarRechazo: function - Procesar rechazo definitivo
+            */}
+            {/* FLUJO:
+                1. handleRechazar() → Abre este modal y establece currentComprobante
+                2. Admin ingresa motivo obligatorio en textarea
+                3. confirmarRechazo() → Valida motivo y procesa rechazo
+                4. Modal se cierra y limpia variables
+            */}
+            {/* BACKEND ENDPOINT: POST /api/comprobantes/{id}/rechazar */}
             {showRejectModal && (
                 <div className="fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center z-50 p-2 xs:p-4">
                     <div className="bg-red-50/95 backdrop-blur-lg rounded-lg xs:rounded-xl sm:rounded-2xl max-w-sm xs:max-w-md w-full shadow-2xl border border-red-200/50 overflow-hidden">
+                        {/* ICONO DE ADVERTENCIA */}
                         <div className="flex justify-center pt-6 xs:pt-8 pb-3 xs:pb-4">
                             <div className="w-16 xs:w-20 h-16 xs:h-20 bg-red-200/80 rounded-full flex items-center justify-center">
                                 <svg className="w-10 xs:w-12 h-10 xs:h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                             </div>
                         </div>
+                        
+                        {/* TÍTULO DEL MODAL */}
                         <div className="text-center px-4 xs:px-6 pb-1 xs:pb-2">
                             <h3 className="text-lg xs:text-xl font-bold text-red-800">Confirmar Rechazo</h3>
                         </div>
+                        
+                        {/* CONTENIDO DEL MODAL */}
                         <div className="px-4 xs:px-6 pb-6 xs:pb-8">
+                            {/* ========== MENSAJE DE CONFIRMACIÓN ========== */}
+                            {/* MUESTRA: Nombre del estudiante desde currentComprobante.nombreAlumno */}
                             <p className="text-sm xs:text-base text-gray-700 mb-4 xs:mb-6 text-center">
                                 ¿Estás seguro que deseas rechazar el comprobante de <br />
                                 <span className="font-semibold text-gray-900">{currentComprobante?.nombreAlumno}</span>?
                             </p>
                             
-                            {/* Campo para el motivo del rechazo */}
+                            {/* ========== CAMPO MOTIVO DE RECHAZO - OBLIGATORIO ========== */}
+                            {/* VARIABLE: motivoRechazo (string) - Controlada por setMotivoRechazo */}
+                            {/* VALIDACIÓN: confirmarRechazo() verifica que no esté vacío */}
+                            {/* BACKEND: Este motivo se envía al servidor y se almacena en BD */}
+               
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Motivo del rechazo *
@@ -1165,15 +1401,35 @@ export function ComprobanteRecibo() {
                                 />
                             </div>
                             
+                            {/* ========== BOTONES DE ACCIÓN ========== */}
                             <div className="flex gap-2 xs:gap-3 justify-center">
-                                <button onClick={() => { setShowRejectModal(false); setMotivoRechazo(''); }} className="px-4 xs:px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md xs:rounded-lg text-sm xs:text-base transition-colors duration-150">Cancelar</button>
-                                <button onClick={confirmarRechazo} className="px-4 xs:px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-md xs:rounded-lg text-sm xs:text-base transition-colors duration-150">Rechazar</button>
+                                {/* BOTÓN CANCELAR: Cierra modal y limpia motivo */}
+                                <button 
+                                    onClick={() => { 
+                                        setShowRejectModal(false); 
+                                        setMotivoRechazo(''); 
+                                    }} 
+                                    className="px-4 xs:px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md xs:rounded-lg text-sm xs:text-base transition-colors duration-150"
+                                >
+                                    Cancelar
+                                </button>
+                                
+                                {/* BOTÓN RECHAZAR: Ejecuta confirmarRechazo() */}
+                          
+                                <button 
+                                    onClick={confirmarRechazo} 
+                                    className="px-4 xs:px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-md xs:rounded-lg text-sm xs:text-base transition-colors duration-150"
+                                >
+                                    Rechazar
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
 
+            {/* ==================== MODAL DE CONFIRMACIÓN DE ÉXITO ==================== */}
+        
             {showSuccessModal && (
                 <div className="fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center z-50 p-2 xs:p-4">
                     <div className="bg-green-50/95 backdrop-blur-lg rounded-lg xs:rounded-xl sm:rounded-2xl max-w-sm xs:max-w-md w-full shadow-2xl border border-green-200/50 overflow-hidden">
@@ -1188,6 +1444,8 @@ export function ComprobanteRecibo() {
                         <div className="px-4 xs:px-6 pb-6 xs:pb-8">
                             <p className="text-sm xs:text-base text-gray-700 mb-4 xs:mb-6 text-center">
                                 El comprobante de <br />
+                                {/* ========== NOMBRE DEL ESTUDIANTE APROBADO ========== */}
+                                {/* FUENTE: currentComprobante.nombreAlumno */}
                                 <span className="font-semibold text-gray-900">{currentComprobante?.nombreAlumno}</span> <br />
                                 ha sido validado exitosamente.
                             </p>
