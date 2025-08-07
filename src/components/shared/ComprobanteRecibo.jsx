@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// TODO: Descomentar cuando esté listo el backend
-// import { api } from '../../config/api.js';
 
-// Componente de pantalla de carga
-// aclaro que esto es solo una simulación de carga, es decir, no es necesario para el funcionamiento real
-// Se usa para mostrar una animación mientras se cargan los datos si en dado caso ya en produccion
-// los datos se cargan de forma asincrónica desde el backend
 function LoadingScreen({ onComplete }) {
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -1459,4 +1453,5 @@ export function ComprobanteRecibo() {
         </div>
     );
 }
+
 
